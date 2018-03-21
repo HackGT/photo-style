@@ -1,0 +1,3 @@
+*.pyc
+fast_neural_style/images
+fast_neural_style/saved_models
