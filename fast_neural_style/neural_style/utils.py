@@ -41,3 +41,7 @@ def normalize_batch(batch):
     batch -= Variable(mean)
     batch = batch / Variable(std)
     return batch
+
+def is_cuda(model):
+    # hack, but an official hack
+    return next(model.parameters()).is_cuda
