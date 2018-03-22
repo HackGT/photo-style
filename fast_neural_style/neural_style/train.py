@@ -17,28 +17,28 @@ from vgg import Vgg16
 
 
 def checkpoint_model(model, directory, filename):
-    
+
     # always write models to disk in cpu eval mode
     # restore original model state after writing!
 
     was_training = model.training
     if was_training:
         model.eval()
-        
+
     was_cuda = utils.is_cuda(model)
     if was_cuda:
         model.cpu()
 
     save_location = os.path.join(directory, filename)
     torch.save(model.state_dict(), save_location)
-    
+
     if was_cuda:
         model.cuda()
 
     if was_training:
         model.train()
 
-    
+
 
 def train(args):
     np.random.seed(args.seed)
@@ -131,24 +131,13 @@ def train(args):
                 print(mesg)
 
             if args.checkpoint_model_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
-                transformer.eval()
-                if args.cuda:
-                    transformer.cpu()
                 ckpt_model_filename = "ckpt_epoch_" + str(e) + "_batch_id_" + str(batch_id + 1) + ".pth"
-                ckpt_model_path = os.path.join(args.checkpoint_model_dir, ckpt_model_filename)
-                torch.save(transformer.state_dict(), ckpt_model_path)
-                if args.cuda:
-                    transformer.cuda()
-                transformer.train()
+                checkpoint_model(transformer, args.checkpoint_model_dir, ckpt_model_filename)
 
     # save model
-    transformer.eval()
-    if args.cuda:
-        transformer.cpu()
     save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
         args.content_weight) + "_" + str(args.style_weight) + ".model"
-    save_model_path = os.path.join(args.save_model_dir, save_model_filename)
-    torch.save(transformer.state_dict(), save_model_path)
+    checkpoint_model(transformer, args.save_model_dir, save_model_filename)
 
     print("\nDone, trained model saved at", save_model_path)
 
@@ -186,7 +175,8 @@ if __name__ == "__main__":
                                   help="number of images after which the training loss is logged, default is 500")
     arg_parser.add_argument("--checkpoint-interval", type=int, default=2000,
                                   help="number of batches after which a checkpoint of the trained model will be created")
-    arg_parser.add_argument("--resume-from", type=str, required=True,
+    # TODO: save and load optimizer data (gradient history, etc)
+    arg_parser.add_argument("--resume-from", type=str, required=False,
                                  help="saved model/checkpoint to resume training from")
     args = arg_parser.parse_args()
 
