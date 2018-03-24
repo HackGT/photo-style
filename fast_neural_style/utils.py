@@ -1,5 +1,6 @@
 import torch
 from PIL import Image
+import requests
 from torch.autograd import Variable
 
 
@@ -11,6 +12,17 @@ def load_image(filename, size=None, scale=None):
         img = img.resize((int(img.size[0] / scale), int(img.size[1] / scale)), Image.ANTIALIAS)
     return img
 
+def load_image_from_url(url):
+    #stream from url directly into pil image, without buffering
+    image = Image.open(requests.get(url, stream=True).raw)
+    return image
+
+def get_image(tensor):
+    #TODO: cloning the tensor is cheap on gpu but could fail on cpu
+    #TODO: check memory performance
+    image = tensor.clone().clamp(0, 255).numpy()
+    image = image.transpose(1, 2, 0).astype("uint8")
+    return Image.fromarray(image)
 
 def save_image(filename, data):
     img = data.clone().clamp(0, 255).numpy()

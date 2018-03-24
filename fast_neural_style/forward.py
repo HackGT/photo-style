@@ -38,6 +38,32 @@ def get_paths(source):
     return paths, names
 
 
+def forward_pass(model, image, cuda=True, pipeline=None):
+    if pipeline is None:
+        pipeline = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Lambda(lambda x: x.mul(255))
+                    ])
+
+    batch_tensor = pipeline(image).unsqueeze(0)
+
+    if cuda and not utils.is_cuda(model):
+        raise Exception("Cuda specified but provided model is not cuda!")
+    
+    model.eval() 
+    
+    if cuda:
+        batch_tensor = batch_tensor.cuda()
+
+    batch_variable = Variable(batch_tensor, volatile=True)
+    
+    output_tensor = model(batch_variable).data[0]
+
+    if cuda:
+        output_tensor = output_tensor.cpu()
+
+    return output_tensor
+
 def forward(args):
     paths, filenames = get_paths(args.content_dir)
     images = []
@@ -84,26 +110,26 @@ def forward(args):
         utils.save_image(os.path.join(args.output_dir, filename), out_tensor)
    
 
-if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser(description="batch style transfer")
+# if __name__ == "__main__":
+    # arg_parser = argparse.ArgumentParser(description="batch style transfer")
 
-    arg_parser.add_argument("--content-dir", type=str, required=True,
-                                 help="path to directory containing images you want to stylize")
-    # arg_parser.add_argument("--content-scale", type=float, default=None,
-                                 # help="factor for scaling down the content image")
-    arg_parser.add_argument("--output-dir", type=str, required=True,
-                                 help="path for saving the output images")
-    arg_parser.add_argument("--model", type=str, required=True,
-                                 help="saved model to be used for stylizing the images")
-    arg_parser.add_argument("--cuda", type=int, required=True,
-                                 help="set it to 1 for running on GPU, 0 for CPU")
+    # arg_parser.add_argument("--content-dir", type=str, required=True,
+                                 # help="path to directory containing images you want to stylize")
+    # # arg_parser.add_argument("--content-scale", type=float, default=None,
+                                 # # help="factor for scaling down the content image")
+    # arg_parser.add_argument("--output-dir", type=str, required=True,
+                                 # help="path for saving the output images")
+    # arg_parser.add_argument("--model", type=str, required=True,
+                                 # help="saved model to be used for stylizing the images")
+    # arg_parser.add_argument("--cuda", type=int, required=True,
+                                 # help="set it to 1 for running on GPU, 0 for CPU")
     
-    args = arg_parser.parse_args()
+    # args = arg_parser.parse_args()
 
-    if args.cuda and not torch.cuda.is_available():
-        print("ERROR: cuda is not available, try running on CPU")
-        sys.exit(1)
+    # if args.cuda and not torch.cuda.is_available():
+        # print("ERROR: cuda is not available, try running on CPU")
+        # sys.exit(1)
     
-    forward(args) 
+    # forward(args) 
 
 
