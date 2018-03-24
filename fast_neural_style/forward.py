@@ -11,9 +11,9 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision import transforms
 
-import utils
-from transformer_net import TransformerNet
-from vgg import Vgg16
+from . import utils
+from .transformer_net import TransformerNet
+from .vgg import Vgg16
 
 
 def check_paths(args):
@@ -36,27 +36,6 @@ def get_paths(source):
             paths.append(fullpath)
 
     return paths, names
-
-# class LazyImagePipeline(Dataset):
-    # def __init__(self, base_dir, transform = None):
-        # self.transform = transform
-        # self.transformed = set()
-        # self.base_dir = base_dir
-
-    # def peek(self):
-        # paths = get_paths(base_dir)
-        # for path in paths:
-            # if path not in self.transformed:
-                # return path, paths
-        # else:
-            # return None, paths
-
-    # def __len__(self):
-        # return 0
-
-    # def __getitem__
-
-
 
 
 def forward(args):
@@ -84,6 +63,7 @@ def forward(args):
 
     # single batch processing for now (1 frame at a time)
     for image, filename in zip(images, filenames):
+        print("Processing {}".format(filename))
         # wrap tensor with a fake batch dimension
         content_tensor = content_transform(image).unsqueeze(0)
 

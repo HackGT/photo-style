@@ -139,7 +139,7 @@ def train(args):
         args.content_weight) + "_" + str(args.style_weight) + ".model"
     checkpoint_model(transformer, args.save_model_dir, save_model_filename)
 
-    print("\nDone, trained model saved at", save_model_path)
+    print("\nDone, trained model saved at", args.save_model_dir)
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(description="Style transfer model training, with the finetuning and resuming")
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     if args.cuda and not torch.cuda.is_available():
         print("ERROR: cuda is not available, try running on CPU")
         sys.exit(1)
-
+    print("Training from modified trainer...")
     train(args)
 
 
