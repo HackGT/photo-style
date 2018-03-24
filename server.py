@@ -14,7 +14,10 @@ model_cache = {}
 model_paths = {
     'psych01' : './models/psych01/psych01.model',
     'psych02' : './models/psych02/psych02.model',
-    'water01' : './models/water01/water01.model'
+    'water01' : './models/water01/water01.model',
+    'mosaic01': './models/mosaic.pth',
+    'neon01'  : './models/neon03/neon03.model',
+    'neon02'  : './models/neon04/neon04.model'
 }
 
 
@@ -31,7 +34,11 @@ def convert():
     io_stream = BytesIO()
     image.save(io_stream, 'JPEG')
     io_stream.seek(0)
-
+    
+    # torch keeps a cache of memory allocated on gpu
+    # uncomment this to free gpu memory immediately after each conversion
+    # will pay the cost of allocating each time!
+    # torch.cuda.empty_cache()
     return send_file(io_stream, mimetype='image/jpeg')
 
 if __name__ == '__main__':

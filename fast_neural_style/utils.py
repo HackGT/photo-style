@@ -1,4 +1,5 @@
 import torch
+import os
 from PIL import Image
 import requests
 from torch.autograd import Variable
@@ -12,10 +13,12 @@ def load_image(filename, size=None, scale=None):
         img = img.resize((int(img.size[0] / scale), int(img.size[1] / scale)), Image.ANTIALIAS)
     return img
 
+
 def load_image_from_url(url):
     #stream from url directly into pil image, without buffering
     image = Image.open(requests.get(url, stream=True).raw)
     return image
+
 
 def get_image(tensor):
     #TODO: cloning the tensor is cheap on gpu but could fail on cpu
@@ -24,11 +27,26 @@ def get_image(tensor):
     image = image.transpose(1, 2, 0).astype("uint8")
     return Image.fromarray(image)
 
+
 def save_image(filename, data):
     img = data.clone().clamp(0, 255).numpy()
     img = img.transpose(1, 2, 0).astype("uint8")
     img = Image.fromarray(img)
     img.save(filename)
+
+
+def get_paths(source, recurse=False):
+    paths = []
+    names = []
+    for _, _, filenames in os.walk(source):
+        for i, f in enumerate(filenames):
+            fullpath = os.path.join(source, f)
+            names.append(f)
+            paths.append(fullpath)
+        if not recurse:
+            break
+
+    return paths, names
 
 
 def gram_matrix(y):
