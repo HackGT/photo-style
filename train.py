@@ -11,10 +11,10 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision import transforms
 
-import utils
-from transformer_net import TransformerNet
-from vgg import Vgg16
-
+from fast_neural_style import utils
+from fast_neural_style.transformer_net import TransformerNet
+from fast_neural_style.vgg import Vgg16
+from fast_neural_style.forward import forward_pass
 
 def checkpoint_model(model, directory, filename):
 
