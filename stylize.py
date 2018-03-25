@@ -34,7 +34,7 @@ def forward(args):
     # single batch processing for now (1 frame at a time)
     for image, filename in zip(images, filenames):
         print("Processing {}".format(filename))
-        out_tensor = forward_pass(model, image)
+        out_tensor = forward_pass(model, image, cuda = (args.cuda == 1))
         utils.save_image(os.path.join(args.output_dir, filename), out_tensor)
    
 
