@@ -2,7 +2,7 @@ import argparse
 import torch
 import requests
 from io import BytesIO
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from fast_neural_style.forward import forward_pass
 from fast_neural_style.transformer_net import TransformerNet
 from fast_neural_style.utils import load_image_from_url, get_image
@@ -19,8 +19,6 @@ model_paths = {
     'neon01'  : './models/neon03/neon03.model',
     'neon02'  : './models/neon04/neon04.model'
 }
-
-
 
 @app.route('/convert')
 def convert():
@@ -40,6 +38,12 @@ def convert():
     # will pay the cost of allocating each time!
     # torch.cuda.empty_cache()
     return send_file(io_stream, mimetype='image/jpeg')
+
+@app.route('/styles')
+def list_styles():
+    return jsonify({
+        'styles': list(model_paths.keys())
+    })
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launch a style transfer server")
