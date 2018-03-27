@@ -6,9 +6,6 @@ import time
 import numpy as np
 import torch
 from torch.autograd import Variable
-from torch.optim import Adam
-from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets
 from torchvision import transforms
 
 from . import utils
@@ -27,14 +24,14 @@ def forward_pass(model, image, cuda=True, pipeline=None):
 
     if cuda and not utils.is_cuda(model):
         raise Exception("Cuda specified but provided model is not cuda!")
-    
-    model.eval() 
-    
+
+    model.eval()
+
     if cuda:
         batch_tensor = batch_tensor.cuda()
 
     batch_variable = Variable(batch_tensor, volatile=True)
-    
+
     output_tensor = model(batch_variable).data[0]
 
     if cuda:

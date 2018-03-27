@@ -36,7 +36,7 @@ def forward(args):
         print("Processing {}".format(filename))
         out_tensor = forward_pass(model, image, cuda = (args.cuda == 1))
         utils.save_image(os.path.join(args.output_dir, filename), out_tensor)
-   
+
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
@@ -52,13 +52,13 @@ if __name__ == "__main__":
                                  help="saved model to be used for stylizing the images")
     arg_parser.add_argument("--cuda", type=int, required=True,
                                  help="set it to 1 for running on GPU, 0 for CPU")
-    
+
     args = arg_parser.parse_args()
 
     if args.cuda and not torch.cuda.is_available():
         print("ERROR: cuda is not available, try running on CPU")
         sys.exit(1)
-    
-    forward(args) 
+
+    forward(args)
 
 

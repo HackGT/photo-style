@@ -14,6 +14,7 @@ model_cache = {}
 model_paths = {
     'psych01' : './models/psych01/psych01.model',
     'psych02' : './models/psych02/psych02.model',
+    'psych03' : './models/psych03/psych03.model',
     'water01' : './models/water01/water01.model',
     'mosaic01': './models/mosaic.pth',
     'neon01'  : './models/neon03/neon03.model',
@@ -27,12 +28,12 @@ def convert():
     image = load_image_from_url(image_url)
     if style is None:
         style = 'psych02'
-    out_tensor = forward_pass(model_cache[style], image)
+    out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
     image = get_image(out_tensor)
     io_stream = BytesIO()
     image.save(io_stream, 'JPEG')
     io_stream.seek(0)
-    
+
     # torch keeps a cache of memory allocated on gpu
     # uncomment this to free gpu memory immediately after each conversion
     # will pay the cost of allocating each time!
@@ -47,14 +48,15 @@ def list_styles():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Launch a style transfer server")
-    parser.add_argument('--gpu', dest='cuda', action='store_true', 
+    parser.add_argument('--gpu', dest='cuda', action='store_true',
             help='Use gpu models to process requests')
-    parser.add_argument('--cpu', dest='cuda', action='store_false', 
+    parser.add_argument('--cpu', dest='cuda', action='store_false',
             help='Use cpu models to process requests')
     parser.set_defaults(cuda=True)
 
     args = parser.parse_args()
 
+    app.config['cuda'] = args.cuda
     # preload models
     for name, path in model_paths.items():
         model = TransformerNet()
@@ -65,6 +67,11 @@ if __name__ == '__main__':
             model.cpu()
         model.eval()
         model_cache[name] = model
-
+        # hack to warm up the gpu
+        #TODO: investigate pinning cuda buffers to do this properly
+        # dummy = torch.randn((1, 3, 1080, 1920))
+        # if args.cuda:
+            # dummy = dummy.cuda()
+        # model(dummy)
     app.run(debug=False, host='0.0.0.0')
 

@@ -55,6 +55,15 @@ def train(args):
     ])
     train_dataset = datasets.ImageFolder(args.dataset, transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
+    
+    # if we need to, load test/validation set into memory
+    test_images = []
+    if args.test_dir is not None:
+        paths, filenames = utils.get_paths(args.test_dir)
+
+        for path, filename in zip(paths, filenames):
+            test_images.append((utils.load_image(path), filename))
+        
 
     transformer = TransformerNet()
     if args.resume_from is not None:
@@ -129,6 +138,14 @@ def train(args):
                                   (agg_content_loss + agg_style_loss) / (batch_id + 1)
                 )
                 print(mesg)
+            
+            # if a test/validation directory was given, stylize with the checkpoint model
+            if args.test_dir is not None and (batch_id + 1 ) % args.checkpoint_interval == 0:
+                for image, filename in test_images:
+                    print("Validating on {}".format(filename))
+                    out_filename = 'valid_e{:02}_b{:04}_{}'.format(e, batch_id + 1, filename)
+                    out_tensor = forward_pass(transformer, image, cuda = (args.cuda == 1))
+                    utils.save_image(os.path.join(args.checkpoint_model_dir, out_filename), out_tensor)
 
             if args.checkpoint_model_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
                 ckpt_model_filename = "ckpt_epoch_" + str(e) + "_batch_id_" + str(batch_id + 1) + ".pth"
@@ -178,6 +195,8 @@ if __name__ == "__main__":
     # TODO: save and load optimizer data (gradient history, etc)
     arg_parser.add_argument("--resume-from", type=str, required=False,
                                  help="saved model/checkpoint to resume training from")
+    arg_parser.add_argument("--test-dir", type=str, required=False,
+                                 help="dir containing images to validate models on at each checkpoint")
     args = arg_parser.parse_args()
 
     if args.cuda and not torch.cuda.is_available():
