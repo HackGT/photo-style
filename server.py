@@ -1,6 +1,7 @@
 import argparse
 import torch
 import requests
+import re
 from io import BytesIO
 from flask import Flask, request, send_file, jsonify
 from fast_neural_style.forward import forward_pass
@@ -18,13 +19,19 @@ model_paths = {
     'water01' : './models/water01/water01.model',
     'mosaic01': './models/mosaic.pth',
     'neon01'  : './models/neon03/neon03.model',
-    'neon02'  : './models/neon04/neon04.model'
+    'neon02'  : './models/neon04/neon04.model',
+    'eagle01' : './models/eagle01/eagle01.model',
+    'eagle02' : './models/eagle01_tuned/eagle01_tuned.model',
+    'album01' : './models/album01/album01.model'
 }
 
 @app.route('/convert')
 def convert():
     image_url = request.args.get('image_url')
     style = request.args.get('style')
+    # splits = re.split(r'&?(image_url|style)=', request.full_path)
+    # style = splits[-1]
+    # image_url = splits[2]
     image = load_image_from_url(image_url)
     if style is None:
         style = 'psych02'

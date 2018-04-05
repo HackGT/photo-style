@@ -54,7 +54,8 @@ def train(args):
         transforms.Lambda(lambda x: x.mul(255))
     ])
     train_dataset = datasets.ImageFolder(args.dataset, transform)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
+                                num_workers=16)
     
     # if we need to, load test/validation set into memory
     test_images = []
