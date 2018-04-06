@@ -22,7 +22,9 @@ model_paths = {
     'neon02'  : './models/neon04/neon04.model',
     'eagle01' : './models/eagle01/eagle01.model',
     'eagle02' : './models/eagle01_tuned/eagle01_tuned.model',
-    'album01' : './models/album01/album01.model'
+    'album01' : './models/album01/album01.model',
+    'cube01'  : './models/cube01/cube01.model',
+    'cheetos01':'./models/cheetos01/cheetos01.model'
 }
 
 
@@ -30,9 +32,11 @@ model_paths = {
 def convert_encoded():
     style = request.args.get('style')
     if style is None:
-        style = 'water01'
+        style = 'psych01'
 
     image = load_from_base64(request.get_json()['image_url'])
+    # resize max of 1280 x 720 while keeping aspect ratio
+    image.thumbnail((1280, 1280))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
     return send_file(get_image_stream(out_tensor), mimetype='image/PNG')
 
@@ -47,6 +51,7 @@ def convert():
     image = load_image_from_url(image_url)
     if style is None:
         style = 'psych02'
+    image.thumbnail((1280, 1280))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
     # torch keeps a cache of memory allocated on gpu
     # uncomment this to free gpu memory immediately after each conversion
