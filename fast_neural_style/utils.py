@@ -1,7 +1,10 @@
 import torch
 import os
-from PIL import Image
+import base64
 import requests
+import re
+from PIL import Image
+from io import BytesIO
 from torch.autograd import Variable
 
 
@@ -18,6 +21,19 @@ def load_image_from_url(url):
     #stream from url directly into pil image, without buffering
     image = Image.open(requests.get(url, stream=True).raw)
     return image
+
+
+def load_from_base64(base64_string):
+    data = re.sub('^data:image/.+;base64,', '', base64_string)
+    return Image.open(BytesIO(base64.b64decode(data)))
+   
+
+def get_image_stream(output_tensor):
+    image = get_image(output_tensor)
+    io_stream = BytesIO()
+    image.save(io_stream, 'PNG')
+    io_stream.seek(0)
+    return io_stream
 
 
 def get_image(tensor):

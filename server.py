@@ -2,11 +2,11 @@ import argparse
 import torch
 import requests
 import re
-from io import BytesIO
 from flask import Flask, request, send_file, jsonify
 from fast_neural_style.forward import forward_pass
 from fast_neural_style.transformer_net import TransformerNet
-from fast_neural_style.utils import load_image_from_url, get_image
+from fast_neural_style.utils import load_image_from_url, get_image, \
+                                    load_from_base64, get_image_stream
 
 app = Flask(__name__)
 
@@ -25,6 +25,18 @@ model_paths = {
     'album01' : './models/album01/album01.model'
 }
 
+
+@app.route('/convert_encoded', methods=['POST'])
+def convert_encoded():
+    style = request.args.get('style')
+    if style is None:
+        style = 'water01'
+
+    image = load_from_base64(request.get_json()['image_url'])
+    out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
+    return send_file(get_image_stream(out_tensor), mimetype='image/PNG')
+
+
 @app.route('/convert')
 def convert():
     image_url = request.args.get('image_url')
@@ -36,16 +48,11 @@ def convert():
     if style is None:
         style = 'psych02'
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
-    image = get_image(out_tensor)
-    io_stream = BytesIO()
-    image.save(io_stream, 'JPEG')
-    io_stream.seek(0)
-
     # torch keeps a cache of memory allocated on gpu
     # uncomment this to free gpu memory immediately after each conversion
     # will pay the cost of allocating each time!
     # torch.cuda.empty_cache()
-    return send_file(io_stream, mimetype='image/jpeg')
+    return send_file(get_image_stream(out_tensor), mimetype='image/PNG')
 
 @app.route('/styles')
 def list_styles():
