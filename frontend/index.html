@@ -21,20 +21,63 @@
                 <div class="col offset-0">
                     <form method="post" style="color:black;">
                         <h2 class="sr-only">Login Form</h2>
-                        <div class="form-group"><input class="form-control" type="email" name="email" placeholder="Phone Number"></div>
                         <div class="form-group">
-                            <div class="dropdown"><button class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false" type="button">Select Filter Style&nbsp;</button>
-                                <div class="dropdown-menu" role="menu"><a class="dropdown-item" role="presentation" href="#">First Item</a><a class="dropdown-item" role="presentation" href="#">Second Item</a><a class="dropdown-item" role="presentation" href="#">Third Item</a></div>
+                            <input class="form-control" type="email" name="email" placeholder="Phone Number">
+                        </div>
+                        <div class="form-group">
+                            <div class="dropdown">
+                                <button class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false" type="button">Select Filter Style&nbsp;</button>
+                                <div class="dropdown-menu" role="menu">
+                                    <a class="dropdown-item" role="presentation" href="#">First Item</a>
+                                    <a class="dropdown-item" role="presentation" href="#">Second Item</a>
+                                    <a class="dropdown-item" role="presentation" href="#">Third Item</a>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group"><button class="btn btn-primary btn-block" type="submit">Take Photo</button></div>
+                        <div class="form-group">
+                            <button id="takephoto" class="btn btn-primary btn-block" type="submit">Take Photo</button>
+                        </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        <!-- [1] -->
+        <div id="modal-1" aria-hidden="true">
+            <!-- [2] -->
+            <div tabindex="-1" data-micromodal-close>
+
+                <!-- [3] -->
+                <div role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+
+
+                    <header>
+                        <h2 id="modal-1-title">
+                            Modal Title
+                        </h2>
+
+                        <!-- [4] -->
+                        <button aria-label="Close modal" data-micromodal-close></button>
+                    </header>
+
+                    <div id="modal-1-content">
+                        Modal Content
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $.ready(function() {
+            $('#takephoto').onClick(function() {
+                console.log("fd")
+                MicroModal.show('modal-1');
+            })
+        })
+    </script>
 </body>
 
 </html>
