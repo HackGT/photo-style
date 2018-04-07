@@ -8,6 +8,8 @@ from fast_neural_style.transformer_net import TransformerNet
 from fast_neural_style.utils import load_image_from_url, get_image, \
                                     load_from_base64, get_image_stream, \
                                     get_gcloud_url
+import os
+from twilio.rest import Client
 
 app = Flask(__name__)
 
@@ -25,7 +27,19 @@ model_paths = {
     'cube01'  : './models/cube01/cube01.model',
     'cheetos01':'./models/cheetos01/cheetos01.model'
 }
+account = os.environ['TWILIO_ACCOUNT']
+token = os.environ["TWILIO_TOKEN"]
+client = Client(account, token)
 
+@app.route('/send-mms', methods=['POST'])
+def send_mms():
+    client.messages.create(
+        to=request.get_json()['phone'],
+        messaging_service_sid=os.environ["TWILIO_SERVICE"],
+        body="",
+        media_url=request.get_json()['url']
+    )
+    return jsonify()
 
 @app.route('/convert_encoded', methods=['POST'])
 def convert_encoded():
