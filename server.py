@@ -53,7 +53,7 @@ def convert_encoded():
     if 'style' in request_data:
         style = request_data['style']
     else:
-        style = 'psych01'
+        style = 'psych02'
 
     image = load_from_base64(request_data['image_url'])
     # resize max of 1280 x 720 while keeping aspect ratio
