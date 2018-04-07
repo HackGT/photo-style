@@ -38,21 +38,24 @@ client = Client(account, token)
 @cross_origin()
 def send_mms():
     client.messages.create(
-        to=request.get_json()['phone'],
+        to=request.get_json(force=True)['phone'],
         messaging_service_sid=os.environ["TWILIO_SERVICE"],
         body="",
-        media_url=request.get_json()['url']
+        media_url=request.get_json(force=True)['url']
     )
     return jsonify()
 
 @app.route('/convert_encoded', methods=['POST'])
 @cross_origin()
 def convert_encoded():
-    style = request.args.get('style')
-    if style is None:
+    request_data = request.get_json(force=True)
+
+    if 'style' in request_data:
+        style = request_data['style']
+    else:
         style = 'psych01'
 
-    image = load_from_base64(request.get_json()['image_url'])
+    image = load_from_base64(request_data['image_url'])
     # resize max of 1280 x 720 while keeping aspect ratio
     image.thumbnail((1280, 1280))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
@@ -116,5 +119,5 @@ if __name__ == '__main__':
         # if args.cuda:
             # dummy = dummy.cuda()
         # model(dummy)
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0', port=8080)
 
