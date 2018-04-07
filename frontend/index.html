@@ -63,14 +63,15 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div class="photobooth">
-                            <a data-control="takePhoto" href>Take Photo</a>
-                            <div id="countdown">
-                                <div id="countdown-number"></div>
-                                <svg>
-                                    <circle r="18" cx="20" cy="20"></circle>
-                                </svg>
+                        <div class="photobooth container">
+
+                            <div class="row justify-content-center">
+                                <a style="font-size: 2.5em;" data-control="takePhoto" href>Take Photo</a>
                             </div>
+                            <div class="row justify-content-center">
+                                <div id="countdown"></div>
+                            </div>
+                            
                             <canvas class="photo"></canvas>
                             <video class="player"></video>
                             <div class="strip"></div>
@@ -87,16 +88,10 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="assets/js/izitoast.js"></script>
+    <script src="assets/js/countdown.js"></script>
     <script src="assets/js/webcam.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        $.ready(function() {
-            $('#takephoto').onClick(function() {
-                console.log("fd")
-                MicroModal.show('modal-1');
-            })
-        })
-
         var canvases = document.getElementsByClassName('smoke-canvas')
 
         var colors = [

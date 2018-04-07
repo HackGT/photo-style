@@ -69,17 +69,30 @@ const paintToCanvas = () => {
 };
 
 const takePhoto = () => {
-    snap.currentTime = 0;
-    snap.play();
+    $("#countdown").countdown360({
+        radius: 60.5,
+        seconds: 3,
+        strokeWidth: 15,
+        fillStyle: '#0276FD',
+        strokeStyle: '#003F87',
+        fontSize: 50,
+        fontColor: '#FFFFFF',
+        autostart: false,
+        onComplete: function () {
+            snap.currentTime = 0;
+            snap.play();
 
-    const data = canvas.toDataURL("image/jpeg");
-    currentData = data;
-    const link = document.createElement("a");
-    link.href = data;
-    link.setAttribute("download", "photo");
-    link.classList.add("photo");
-    link.innerHTML = `<img src="${data}" alt="photo" />`;
-    strip.insertBefore(link, strip.firstChild);
+            const data = canvas.toDataURL("image/jpeg");
+            currentData = data;
+            const link = document.createElement("a");
+            link.href = data;
+            link.setAttribute("download", "photo");
+            link.classList.add("photo");
+            link.innerHTML = `<img src="${data}" alt="photo" />`;
+            strip.insertBefore(link, strip.firstChild);
+        }
+    }).start()
+
 };
 
 const colorize = pixels => {
@@ -147,10 +160,49 @@ $(document).ready(function () {
         }
     })
 
-    $('#sendphoto').click(function(e) {
+    $('#sendphoto').click(function (e) {
         e.preventDefault()
         if (currentData) {
-            
+            $.post("http://128.61.105.52/convert_encoded", {
+                image_url: currentData,
+                style: $('#filter').val()
+            }, function (data, status) {
+                console.log(data, status)
+                if (status == 200) {
+                    iziToast.info({
+                        title: 'FYI',
+                        message: 'Photo processed!'
+                    });
+                    var url = data.url;
+                    $.post("http://128.61.105.52/send-mms", {
+                        phone: $('#phone').val(),
+                        url: url
+                    }, function (data, status) {
+                        console.log(data, status)
+                        if (status == 200) {
+                            iziToast.success({
+                                title: 'FYI',
+                                message: 'Photo messaged!'
+                            });
+                        } else {
+                            iziToast.error({
+                                title: 'Error',
+                                message: 'Something went wrong'
+                            });
+                        }
+                    })
+                } else {
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Something went wrong'
+                    });
+                }
+            }).fail(function () {
+                iziToast.error({
+                    title: 'Error',
+                    message: 'Something went wrong'
+                });
+            });
         } else {
             iziToast.error({
                 title: 'Error',
@@ -167,3 +219,4 @@ colorizeControls.forEach(input =>
 
 buttons.forEach(button => button.addEventListener("click", handleControls));
 video.addEventListener("canplay", paintToCanvas);
+
