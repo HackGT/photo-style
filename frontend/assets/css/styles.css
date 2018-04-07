@@ -1,5 +1,11 @@
+@font-face {
+    font-family: 'One Day';
+    src: url('https://storage.googleapis.com/hackgt/fonts/ONEDAY.ttf');
+}
+
 body {
     overflow-y: hidden;
+    font-family: 'One Day', sans-serif;
 }
 
 .login-dark {
@@ -82,4 +88,10 @@ body {
 
 .smoke-canvas:nth-child(2) {
     z-index: -10;
+}
+
+.text-center {
+    color: white;
+    margin: 2em 0;
+    font-size: 5em;
 }
