@@ -6,7 +6,8 @@ from flask import Flask, request, send_file, jsonify
 from fast_neural_style.forward import forward_pass
 from fast_neural_style.transformer_net import TransformerNet
 from fast_neural_style.utils import load_image_from_url, get_image, \
-                                    load_from_base64, get_image_stream
+                                    load_from_base64, get_image_stream, \
+                                    get_gcloud_url
 
 app = Flask(__name__)
 
@@ -17,9 +18,11 @@ model_paths = {
     'psych02' : './models/psych02/psych02.model',
     'psych03' : './models/psych03/psych03.model',
     'water01' : './models/water01/water01.model',
-    'mosaic01': './models/mosaic01/mosaic01.model',
-    'neon01'  : './models/neon01/neon01.model',
-    'eagle01' : './models/eagle01_tuned/eagle01_tuned.model',
+    'mosaic01': './models/mosaic.pth',
+    'neon01'  : './models/neon03/neon03.model',
+    'neon02'  : './models/neon04/neon04.model',
+    'eagle01' : './models/eagle01/eagle01.model',
+    'eagle02' : './models/eagle01_tuned/eagle01_tuned.model',
     'album01' : './models/album01/album01.model',
     'cube01'  : './models/cube01/cube01.model',
     'cheetos01':'./models/cheetos01/cheetos01.model'
@@ -36,7 +39,9 @@ def convert_encoded():
     # resize max of 1280 x 720 while keeping aspect ratio
     image.thumbnail((1280, 1280))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
-    return send_file(get_image_stream(out_tensor), mimetype='image/PNG')
+    return {
+        "url": get_gcloud_url(get_image_stream(out_tensor))
+    }
 
 
 @app.route('/convert')
@@ -55,7 +60,9 @@ def convert():
     # uncomment this to free gpu memory immediately after each conversion
     # will pay the cost of allocating each time!
     # torch.cuda.empty_cache()
-    return send_file(get_image_stream(out_tensor), mimetype='image/PNG')
+    return {
+        "url": get_gcloud_url(get_image_stream(out_tensor))
+    }
 
 @app.route('/styles')
 def list_styles():
