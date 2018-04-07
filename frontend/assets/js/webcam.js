@@ -184,6 +184,7 @@ $(document).ready(function () {
                                 title: 'FYI',
                                 message: 'Photo messaged!'
                             });
+                            window.location.reload();
                         } else {
                             iziToast.error({
                                 title: 'Error',
