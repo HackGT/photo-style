@@ -147,10 +147,49 @@ $(document).ready(function () {
         }
     })
 
-    $('#sendphoto').click(function(e) {
+    $('#sendphoto').click(function (e) {
         e.preventDefault()
         if (currentData) {
-            
+            $.post("http://128.61.105.52/convert_encoded", {
+                image_url: currentData,
+                style: $('#filter').val()
+            }, function (data, status) {
+                console.log(data, status)
+                if (status == 200) {
+                    iziToast.info({
+                        title: 'FYI',
+                        message: 'Photo processed!'
+                    });
+                    var url = data.url;
+                    $.post("http://128.61.105.52/send-mms", {
+                        phone: $('#phone').val(),
+                        url: url
+                    }, function (data, status) {
+                        console.log(data, status)
+                        if (status == 200) {
+                            iziToast.success({
+                                title: 'FYI',
+                                message: 'Photo messaged!'
+                            });
+                        } else {
+                            iziToast.error({
+                                title: 'Error',
+                                message: 'Something went wrong'
+                            });
+                        }
+                    })
+                } else {
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Something went wrong'
+                    });
+                }
+            }).fail(function () {
+                iziToast.error({
+                    title: 'Error',
+                    message: 'Something went wrong'
+                });
+            });
         } else {
             iziToast.error({
                 title: 'Error',

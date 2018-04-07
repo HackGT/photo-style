@@ -74,6 +74,7 @@ a:not(.photo).active, a:not(.photo):hover, a:not(.photo):active {
 .strip {
   padding: 2rem;
 }
+
 .strip img {
   width: 100px;
   overflow-x: scroll;

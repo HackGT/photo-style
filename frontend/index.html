@@ -22,7 +22,6 @@
             <div class="row">
                 <div class="col offset-0">
                     <form style="color:black;">
-                        <h2 class="sr-only">Login Form</h2>
                         <div class="form-group" style="margin-top: 4em;">
                             <input id="phone" class="form-control" placeholder="Phone Number">
                         </div>
@@ -59,7 +58,12 @@
                     <div class="modal-body">
                         <div class="photobooth">
                             <a data-control="takePhoto" href>Take Photo</a>
-
+                            <div id="countdown">
+                                <div id="countdown-number"></div>
+                                <svg>
+                                    <circle r="18" cx="20" cy="20"></circle>
+                                </svg>
+                            </div>
                             <canvas class="photo"></canvas>
                             <video class="player"></video>
                             <div class="strip"></div>
