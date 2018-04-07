@@ -179,7 +179,7 @@ $(document).ready(function () {
                         url: url
                     }), function (data, status) {
                         console.log(data, status)
-                        if (status == 200) {
+                        if (status == 'success') {
                             iziToast.success({
                                 title: 'FYI',
                                 message: 'Photo messaged!'
