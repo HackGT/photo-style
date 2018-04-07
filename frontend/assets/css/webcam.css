@@ -1,0 +1,82 @@
+/* @import url("https://fonts.googleapis.com/css?family=Roboto+Mono");
+html {
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: inherit;
+}
+*:before, *:after {
+  box-sizing: inherit;
+}
+
+html {
+  font-size: 10px;
+  background: linear-gradient(to bottom, #fff, #f2f2f2);
+  font-family: "Roboto Mono", monospace;
+  padding: 10px;
+  min-height: 100vh;
+}
+
+body:before {
+  content: "photobooth";
+  font-size: 10vmin;
+  top: 0;
+  letter-spacing: 2vmin;
+  position: absolute;
+  opacity: 0.1;
+  z-index: -1;
+} */
+
+.photobooth {
+  max-width: 150rem;
+  margin: 12vmin auto;
+  border-radius: 2px;
+}
+.photobooth:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.photo {
+  width: 100%;
+}
+
+.player {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  width: 200px;
+  max-width: 50vw;
+  margin-top: -25vw;
+}
+
+a:not(.photo) {
+  text-decoration: none;
+  color: #222;
+  border: 1px solid #222;
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+a:not(.photo).active, a:not(.photo):hover, a:not(.photo):active {
+  background: #222;
+  color: #fff;
+}
+
+.controls {
+  display: none;
+  margin-bottom: 20px;
+}
+.controls.active {
+  display: block;
+}
+
+.strip {
+  padding: 2rem;
+}
+.strip img {
+  width: 100px;
+  overflow-x: scroll;
+  margin: 1%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
