@@ -32,19 +32,9 @@
                         <div class="form-group" style="margin-top: 4em;">
                             <input id="phone" class="form-control" placeholder="Phone Number">
                         </div>
-                        <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
+                        <!-- <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
                             <option selected>Select Filter Style</option>
-                            <!-- <option value="psych01">psych01</option>
-                            <option value="psych02">psych02</option>
-                            <option value="psych03">psych03</option>
-                            <option value="water01">water01</option>
-                            <option value="mosaic01">mosaic01</option>
-                            <option value="neon01">neon01</option>
-                            <option value="eagle01">eagle01</option>
-                            <option value="album01">album01</option>
-                            <option value="cube01">cube01</option>
-                            <option value="cheetos01">cheetos01</option> -->
-                        </select>
+                        </select> -->
                         <div class="row text-white text-center" style="font-size: 14px;">
                             <h5>I acknowledge that receiving MMS may result in charges from my mobile carrier</h5>
                         </div>
@@ -53,6 +43,11 @@
                         </div>
                     </form>
                 </div>
+            </div>
+            <div class="row">
+
+                    <div id="filter" class="radio-container">
+                    </div>
             </div>
         </div>
 
@@ -78,9 +73,9 @@
                             <canvas class="photo"></canvas>
                             <video class="player"></video>
                             <div class="strip"></div>
-                            
+
                         </div>
-                       
+
                     </div>
                     <div class="modal-footer">
                         <button id="sendphoto" type="button" class="btn btn-primary">Send Photo</button>
@@ -110,10 +105,30 @@
             }
 
             for(var i = 0; i < data.styles.length; i++) {
-                var option = document.createElement('option');
-                option.value = data.styles[i];
-                option.text = data.styles[i];
-                filter.appendChild(option);
+                // <input type="radio" name="Filter" value="filter-1">
+                // <label for="filter-1">
+                //     <img src="./assets/images/placeholder.png" alt="">
+                // </label>
+                var div = document.createElement('div');
+                var input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'filter';
+                input.value = data.styles[i];
+                input.id = data.styles[i];
+                var label = document.createElement('label');
+                label.setAttribute('for', data.styles[i]);
+                var image = document.createElement('img');
+                image.src = './assets/images/' + data.styles[i] + '.png';
+                image.onerror = function(err) {
+                    this.src = './assets/images/placeholder.png';
+                }
+                image.width = 150;
+                image.alt = data.styles[i];
+                label.innerText=data.styles[i];
+                label.appendChild(image);
+                div.appendChild(input);
+                div.appendChild(label);
+                filter.appendChild(div);
             }
         });
 

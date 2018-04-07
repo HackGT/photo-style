@@ -95,3 +95,25 @@ body {
     margin: 2em 0;
     font-size: 5em;
 }
+
+.radio-container {
+    display: flex;
+    width: 80vw;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    bottom: 300px;
+    overflow-x: scroll;
+}
+
+input[type='radio'] {
+    visibility: hidden;
+}
+
+input[type='radio']:checked + label {
+    border: 10px black solid;
+}
+
+label {
+    cursor: pointer;
+}
