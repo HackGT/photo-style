@@ -3,6 +3,7 @@ import torch
 import requests
 import re
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS, cross_origin
 from fast_neural_style.forward import forward_pass
 from fast_neural_style.transformer_net import TransformerNet
 from fast_neural_style.utils import load_image_from_url, get_image, \
@@ -12,6 +13,8 @@ import os
 from twilio.rest import Client
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 #TODO: read models and options from a real config file
 model_cache = {}
@@ -32,6 +35,7 @@ token = os.environ["TWILIO_TOKEN"]
 client = Client(account, token)
 
 @app.route('/send-mms', methods=['POST'])
+@cross_origin()
 def send_mms():
     client.messages.create(
         to=request.get_json()['phone'],
@@ -42,6 +46,7 @@ def send_mms():
     return jsonify()
 
 @app.route('/convert_encoded', methods=['POST'])
+@cross_origin()
 def convert_encoded():
     style = request.args.get('style')
     if style is None:
@@ -57,6 +62,7 @@ def convert_encoded():
 
 
 @app.route('/convert')
+@cross_origin()
 def convert():
     image_url = request.args.get('image_url')
     style = request.args.get('style')
@@ -77,6 +83,7 @@ def convert():
     })
 
 @app.route('/styles')
+@cross_origin()
 def list_styles():
     return jsonify({
         'styles': list(model_paths.keys())
