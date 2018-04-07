@@ -6,7 +6,10 @@ import re
 from PIL import Image
 from io import BytesIO
 from torch.autograd import Variable
-
+from google.cloud import storage
+from google.cloud.storage import Blob
+import random
+import string
 
 def load_image(filename, size=None, scale=None):
     img = Image.open(filename)
@@ -35,7 +38,15 @@ def get_image_stream(output_tensor):
     io_stream.seek(0)
     return io_stream
 
-
+def get_gcloud_url(stream):
+    filename = ''.join(random.choice(string.ascii_lowercase+string.digits) for i in range(16)) + ".png"
+    client = storage.Client()
+    bucket = client.get_bucket('hackgt-catalyst2018-photostyle')
+    blob = Blob(filename, bucket)
+    blob.upload_from_file(stream, content_type="image/png", client=client)
+    blob.make_public(client=client)
+    return blob.public_url
+    
 def get_image(tensor):
     #TODO: cloning the tensor is cheap on gpu but could fail on cpu
     #TODO: check memory performance
