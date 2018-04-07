@@ -71,7 +71,7 @@ const paintToCanvas = () => {
 const takePhoto = () => {
     $("#countdown").countdown360({
         radius: 60.5,
-        seconds: 3,
+        seconds: 6,
         strokeWidth: 15,
         fillStyle: '#0276FD',
         strokeStyle: '#003F87',
@@ -149,7 +149,7 @@ const chromakey = pixels => {
 $(document).ready(function () {
     $('#takephoto').click(function (e) {
         e.preventDefault()
-        if ($('#phone').val() && $('#filter').val() !== 'Select Filter Style') {
+        if ($('#phone').val() && $('input[name=filter]:checked').val() !== 'Select Filter Style') {
             $('#myModal').modal()
             getVideo();
         } else {
@@ -165,7 +165,7 @@ $(document).ready(function () {
         if (currentData) {
             $.post("http://128.61.105.52/convert_encoded", JSON.stringify({
                 image_url: currentData,
-                style: $('#filter').val()
+                style: $('input[name=filter]:checked').val()
             }), function (data, status) {
                 console.log(data, status)
                 if (status == "success") {

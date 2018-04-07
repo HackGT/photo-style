@@ -102,8 +102,8 @@ body {
     left: 50%;
     transform: translateX(-50%);
     position: absolute;
-    bottom: 300px;
-    overflow-x: scroll;
+    bottom: 150px;
+    /* overflow-x: scroll; */
 }
 
 input[type='radio'] {
