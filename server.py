@@ -2,6 +2,7 @@ import argparse
 import torch
 import requests
 import re
+import random
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS, cross_origin
 from fast_neural_style.forward import forward_pass
@@ -30,6 +31,9 @@ model_paths = {
     'cube01'  : './models/cube01/cube01.model',
     'cheetos01':'./models/cheetos01/cheetos01.model'
 }
+
+model_names = list(model_paths.keys())
+
 account = os.environ['TWILIO_ACCOUNT']
 token = os.environ["TWILIO_TOKEN"]
 client = Client(account, token)
@@ -59,8 +63,10 @@ def convert_encoded():
     # resize max of 1280 x 720 while keeping aspect ratio
     image.thumbnail((1280, 1280))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
+    url = get_gcloud_url(get_image_stream(out_tensor))
+    print(url)
     return jsonify({
-        "url": get_gcloud_url(get_image_stream(out_tensor))
+        "url": url
     })
 
 
@@ -73,16 +79,18 @@ def convert():
     # style = splits[-1]
     # image_url = splits[2]
     image = load_image_from_url(image_url)
-    if style is None:
-        style = 'psych02'
-    image.thumbnail((1280, 1280))
+    style = random.choice(model_names)
+    print(style)
+    image.thumbnail((720, 720))
     out_tensor = forward_pass(model_cache[style], image, app.config['cuda'])
     # torch keeps a cache of memory allocated on gpu
     # uncomment this to free gpu memory immediately after each conversion
     # will pay the cost of allocating each time!
     # torch.cuda.empty_cache()
+    url = get_gcloud_url(get_image_stream(out_tensor))
+    print(url)
     return jsonify({
-        "url": get_gcloud_url(get_image_stream(out_tensor))
+        "url": url
     })
 
 @app.route('/styles')
@@ -119,5 +127,6 @@ if __name__ == '__main__':
         # if args.cuda:
             # dummy = dummy.cuda()
         # model(dummy)
+    print(model_cache.keys())
     app.run(debug=False, host='0.0.0.0', port=8080)
 
