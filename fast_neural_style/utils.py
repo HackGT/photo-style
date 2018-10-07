@@ -86,18 +86,10 @@ def gram_matrix(y):
 
 def normalize_batch(batch):
     # normalize using imagenet mean and std
-    mean = batch.data.new(batch.data.size())
+    mean = batch.new_tensor([0.485, 0.456, 0.406]).view(-1, 1, 1)
     std = batch.data.new(batch.data.size())
-    mean[:, 0, :, :] = 0.485
-    mean[:, 1, :, :] = 0.456
-    mean[:, 2, :, :] = 0.406
-    std[:, 0, :, :] = 0.229
-    std[:, 1, :, :] = 0.224
-    std[:, 2, :, :] = 0.225
-    batch = torch.div(batch, 255.0)
-    batch -= Variable(mean)
-    batch = batch / Variable(std)
-    return batch
+    std = batch.new_tensor([0.229, 0.224, 0.225]).view(-1, 1, 1)
+    return (batch - mean) / std
 
 def is_cuda(model):
     # hack, but an official hack

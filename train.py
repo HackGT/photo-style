@@ -16,7 +16,7 @@ from fast_neural_style.transformer_net import TransformerNet
 from fast_neural_style.vgg import Vgg16
 from fast_neural_style.forward import forward_pass
 
-def checkpoint_model(model, directory, filename):
+def checkpoint_model(model, directory, filename, device):
 
     # always write models to disk in cpu eval mode
     # restore original model state after writing!
@@ -25,15 +25,19 @@ def checkpoint_model(model, directory, filename):
     if was_training:
         model.eval()
 
-    was_cuda = utils.is_cuda(model)
-    if was_cuda:
-        model.cpu()
+    # was_cuda = utils.is_cuda(model)
+    # if was_cuda:
+
+    #always save as a cpu model
+    model.cpu()
 
     save_location = os.path.join(directory, filename)
     torch.save(model.state_dict(), save_location)
 
-    if was_cuda:
-        model.cuda()
+    # if was_cuda:
+        # model.cuda()
+    #move to cpu or gpu depending on device status
+    model.to(device)
 
     if was_training:
         model.train()
@@ -44,8 +48,9 @@ def train(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    if args.cuda:
-        torch.cuda.manual_seed(args.seed)
+    device = torch.device("cuda" if args.cuda else "cpu")
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     transform = transforms.Compose([
         transforms.Resize(args.image_size),
@@ -66,7 +71,7 @@ def train(args):
             test_images.append((utils.load_image(path), filename))
         
 
-    transformer = TransformerNet()
+    transformer = TransformerNet().to(device)
     if args.resume_from is not None:
         transformer.load_state_dict(torch.load(args.resume_from))
         print("Resuming Training From: {}".format(args.resume_from))
@@ -76,23 +81,18 @@ def train(args):
     optimizer = Adam(transformer.parameters(), args.lr)
     mse_loss = torch.nn.MSELoss()
 
-    vgg = Vgg16(requires_grad=False)
+    vgg = Vgg16(requires_grad=False).to(device)
     style_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.mul(255))
     ])
     style = utils.load_image(args.style_image, size=args.style_size)
     style = style_transform(style)
-    style = style.repeat(args.batch_size, 1, 1, 1)
-
-    if args.cuda:
-        transformer.cuda()
-        vgg.cuda()
-        style = style.cuda()
-
-    style_v = Variable(style)
-    style_v = utils.normalize_batch(style_v)
-    features_style = vgg(style_v)
+    style = style.repeat(args.batch_size, 1, 1, 1).to(device)
+    
+    # print(style.shape)
+    # print(vgg.slice1.cuda)
+    features_style = vgg(utils.normalize_batch(style))
     gram_style = [utils.gram_matrix(y) for y in features_style]
 
     for e in range(args.epochs):
@@ -104,10 +104,8 @@ def train(args):
             n_batch = len(x)
             count += n_batch
             optimizer.zero_grad()
-            x = Variable(x)
-            if args.cuda:
-                x = x.cuda()
-
+            
+            x = x.to(device)
             y = transformer(x)
 
             y = utils.normalize_batch(y)
@@ -128,8 +126,8 @@ def train(args):
             total_loss.backward()
             optimizer.step()
 
-            agg_content_loss += content_loss.data[0]
-            agg_style_loss += style_loss.data[0]
+            agg_content_loss += content_loss.item()
+            agg_style_loss += style_loss.item()
 
             if (batch_id + 1) % args.log_interval == 0:
                 mesg = "{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}".format(
@@ -145,17 +143,17 @@ def train(args):
                 for image, filename in test_images:
                     print("Validating on {}".format(filename))
                     out_filename = 'valid_e{:02}_b{:04}_{}'.format(e, batch_id + 1, filename)
-                    out_tensor = forward_pass(transformer, image, cuda = (args.cuda == 1))
+                    out_tensor = forward_pass(transformer, image, device)
                     utils.save_image(os.path.join(args.checkpoint_model_dir, out_filename), out_tensor)
 
             if args.checkpoint_model_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
                 ckpt_model_filename = "ckpt_epoch_" + str(e) + "_batch_id_" + str(batch_id + 1) + ".pth"
-                checkpoint_model(transformer, args.checkpoint_model_dir, ckpt_model_filename)
+                checkpoint_model(transformer, args.checkpoint_model_dir, ckpt_model_filename, device)
 
     # save model
     save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
         args.content_weight) + "_" + str(args.style_weight) + ".model"
-    checkpoint_model(transformer, args.save_model_dir, save_model_filename)
+    checkpoint_model(transformer, args.save_model_dir, save_model_filename, device)
 
     print("\nDone, trained model saved at", args.save_model_dir)
 
