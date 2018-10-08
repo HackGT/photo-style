@@ -10,8 +10,11 @@ from google.cloud import storage
 from google.cloud.storage import Blob
 import random
 import string
+import cv2
+import numpy as np
 
 def load_image(filename, size=None, scale=None):
+    """Load as PIL Image (as input to the style model)"""
     img = Image.open(filename)
     if size is not None:
         img = img.resize((size, size), Image.ANTIALIAS)
@@ -25,11 +28,16 @@ def load_image_from_url(url):
     image = Image.open(requests.get(url, stream=True).raw)
     return image
 
+def tensor_to_numpy_image(out_tensor):
+    """convert pytorch tensor (from a style model) to (H, W, C) numpy format"""
+    out = out_tensor.clamp(0, 255).numpy()
+    out = out.transpose(1, 2, 0).astype("uint8")
+    return out
 
 def load_from_base64(base64_string):
     data = re.sub('^data:image/.+;base64,', '', base64_string)
     return Image.open(BytesIO(base64.b64decode(data)))
-   
+
 
 def get_image_stream(output_tensor):
     image = get_image(output_tensor)
@@ -46,7 +54,7 @@ def get_gcloud_url(stream):
     blob.upload_from_file(stream, content_type="image/png", client=client)
     blob.make_public(client=client)
     return blob.public_url
-    
+
 def get_image(tensor):
     #TODO: cloning the tensor is cheap on gpu but could fail on cpu
     #TODO: check memory performance
@@ -89,6 +97,7 @@ def normalize_batch(batch):
     mean = batch.new_tensor([0.485, 0.456, 0.406]).view(-1, 1, 1)
     std = batch.data.new(batch.data.size())
     std = batch.new_tensor([0.229, 0.224, 0.225]).view(-1, 1, 1)
+    batch = batch.div_(255.0)
     return (batch - mean) / std
 
 def is_cuda(model):
