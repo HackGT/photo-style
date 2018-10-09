@@ -9,19 +9,24 @@ from fast_neural_style.forward import forward_pass
 from fast_neural_style.transformer_net import TransformerNet
 
 
-def segment_and_style(style_model, detectron_model, pil_image, mask_threshold=0.9, use_grayscale=False):
+def segment_and_style(style_model, detectron_model, pil_image,
+        mask_threshold=0.9,
+        use_grayscale = False,
+        segment_people = True,
+        invert_mask = False):
 
     #original image
     numpy_image = np.array(pil_image)
 
-    if grayscale:
+    if use_grayscale:
         styled = grayscale(numpy_image)
     else:
         #run the style transfer model on the input image
         styled = style_utils.tensor_to_numpy_image(forward_pass(style_model, pil_image))
-    
+
     #get_masks
-    scored_masks = detectron_model.segment_people(numpy_image, mask_threshold)
+    with torch.no_grad():
+        scored_masks = detectron_model.segment_people(numpy_image, mask_threshold)
 
     if len(scored_masks) == 0:
         print("no person found")
@@ -32,6 +37,7 @@ def segment_and_style(style_model, detectron_model, pil_image, mask_threshold=0.
         people_mask = union_masks((m for m, s in scored_masks))
         #style network cuts two pixels off due to convolution padding issues
         styled = cv2.resize(styled, (people_mask.shape[1], people_mask.shape[0]))
+        people_mask = ~people_mask if invert_mask else people_mask
         output, _, _ = apply_binary_mask(numpy_image, styled, ~people_mask)
 
     return output[:, :, ::-1]
@@ -49,5 +55,5 @@ if __name__ == '__main__':
         out_file = ('out_{:02d}.png'.format(i))
 
         input_im = style_utils.load_image(in_file, scale=1)
-        output = segment_and_style(style, detectron, input_im, mask_threshold = 0.95, use_grayscale=True)
+        output = segment_and_style(style, detectron, input_im, mask_threshold = 0.95, use_grayscale=False)
         cv2.imwrite(out_file, output)
