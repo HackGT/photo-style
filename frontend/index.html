@@ -6,48 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalyst Photo Booth</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="assets/js/smoke.js"></script>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/webcam.css">
     <link rel="stylesheet" href="assets/css/izitoast.min.css">
 </head>
 
 <body>
-    <canvas class="smoke-canvas">
-    </canvas>
-    <canvas class="smoke-canvas">
-    </canvas>
-    <canvas class="smoke-canvas">
-    </canvas>
-    <div class="login-dark">
+    <div class="home-dark">
         <div class="container">
             <div class="row">
                 <div class="col">
-                    <h1 class="text-center">Catalyst Photo Booth</h1>
+                    <h1 class="text-center">HackGT Photo Booth</h1>
                 </div>
             </div>
             <div class="row">
-                <div class="col offset-0">
+                <div class="col">
+                    <form style="color:black;">
+                            <button id="takephoto" class="btn btn-primary btn-block">Start</button>
+                    </form>
+<!-- 
                     <form style="color:black;">
                         <div class="form-group" style="margin-top: 4em;">
                             <input id="phone" class="form-control" placeholder="Phone Number">
                         </div>
-                        <!-- <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
+                        <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
                             <option selected>Select Filter Style</option>
-                        </select> -->
+                        </select> 
                         <div class="row text-white text-center" style="font-size: 14px;">
                             <h5>I acknowledge that receiving MMS may result in charges from my mobile carrier</h5>
                         </div>
                         <div class="form-group">
-                            <button id="takephoto" class="btn btn-primary btn-block">Take Photo</button>
-                        </div>
+                        </div> -->
                     </form>
                 </div>
-            </div>
-            <div class="row">
-
-                    <div id="filter" class="radio-container">
-                    </div>
             </div>
         </div>
 
@@ -55,7 +46,7 @@
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Catalyst Photo Booth</h5>
+                        <h5 class="modal-title">Photo Booth</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -90,102 +81,8 @@
     <script src="assets/js/izitoast.js"></script>
     <script src="assets/js/countdown.js"></script>
     <script src="assets/js/webcam.js"></script>
+    <script src="assets/js/processStyle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        var canvases = document.getElementsByClassName('smoke-canvas')
-        var filter = document.getElementById('filter');
-
-        $.get("http://128.61.105.52/styles", function (data, status) {
-            console.log(data,status);
-            if(status !== 'success') {
-                return iziToast.error({
-                        title: 'Error',
-                        message: 'Could not retrieve styles'
-                    });
-            }
-
-            for(var i = 0; i < data.styles.length; i++) {
-                // <input type="radio" name="Filter" value="filter-1">
-                // <label for="filter-1">
-                //     <img src="./assets/images/placeholder.png" alt="">
-                // </label>
-                var div = document.createElement('div');
-                var input = document.createElement('input');
-                input.type = 'radio';
-                input.name = 'filter';
-                input.value = data.styles[i];
-                input.id = data.styles[i];
-                var label = document.createElement('label');
-                label.setAttribute('for', data.styles[i]);
-                var image = document.createElement('img');
-                image.src = './assets/images/' + data.styles[i] + '.png';
-                image.onerror = function(err) {
-                    this.src = './assets/images/placeholder.png';
-                }
-                image.width = 150;
-                image.alt = data.styles[i];
-                label.innerText=data.styles[i];
-                label.appendChild(image);
-                div.appendChild(input);
-                div.appendChild(label);
-                filter.appendChild(div);
-            }
-        });
-
-        var colors = [
-            [85, 195, 234],
-            [100, 100, 100],
-            [230, 83, 149]
-        ]
-
-        var smokes = []
-
-        for (var i = 0; i < canvases.length; i++) {
-            var smokeCanvas = canvases[i]
-            smokeCanvas.width = window.innerWidth
-            smokeCanvas.height = window.innerHeight
-            var smokeCtx = smokeCanvas.getContext('2d')
-            smokes.push(smokemachine(smokeCtx, colors[i]))
-            smokes[i].start()
-        }
-
-        // var smokeCanvas = document.getElementById('canvas')
-        // var smokeCtx = smokeCanvas.getContext('2d')
-
-
-
-        // var gray = smokemachine(smokeCtx, [100, 100, 100])
-        // var blue = smokemachine(smokeCtx, [85, 195, 234])
-        // var pink = smokemachine(smokeCtx, [230, 83, 149])
-
-        // var smokes = [blue, gray, pink]
-
-        // pink.start()
-        // gray.start()
-        // blue.start()
-
-        function initSmoke(index) {
-            var ratio = 1 / 2
-
-            if (index == 0) {
-                ratio = 1 / 5
-            } else if (index == 2) {
-                ratio = 4 / 5
-            }
-            // smokes[(index + 1) % 3].stop()
-            // smokes[index].start()
-            smokes[index].addsmoke(smokeCanvas.width * ratio, smokeCanvas.height, 100)
-        }
-
-        var i = 0;
-
-        setInterval(function () {
-            initSmoke(i)
-            i += 1
-            i %= smokes.length
-        }, 500)
-
-    </script>
 </body>
 
 </html>
