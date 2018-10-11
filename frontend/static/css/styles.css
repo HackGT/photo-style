@@ -14,7 +14,30 @@ body {
     position: relative
 }
 
-.home-dark form {
+.section-wrap {
+    max-width: 1500px;
+    width: 90%;
+}
+
+.section-header {
+    padding: 18px;
+    border-bottom: 2px solid #434a52;
+}
+
+.section-title {
+    font-size: 1.25rem;
+}
+
+.section-body {
+    max-height: 700px;
+    padding: 18px;
+}
+
+.section-footer {
+    padding: 18px;
+}
+
+.start-photo-container {
     max-width: 320px;
     width: 90%;
     padding: 40px;
@@ -26,10 +49,13 @@ body {
     color: #fff;
 }
 
-.home-dark form .btn-primary {
+/* .home-dark form .btn-primary { */
+.photo-btn {
     background: #214a80;
     border: none;
     border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
     padding: 11px;
     box-shadow: none;
     margin-top: 26px;
@@ -37,15 +63,19 @@ body {
     outline: 0;
 }
 
-.home-dark form .btn-primary:active,
-.home-dark form .btn-primary:hover {
+/* TODO: put some color in here? */
+.photo-btn:active,
+.photo-btn:hover {
     background: #214a80;
     outline: 0;
 }
 
-.home-dark form .btn-primary:active {
-    transform: translateY(1px);
+
+.photo-take {
+    width: 300px;
 }
+
+
 
 .home-dark .illustration {
     text-align: center;
@@ -63,24 +93,6 @@ body {
     outline: 0;
     color: inherit
 }
-
-
-
-.home-dark form .forgot {
-    display: block;
-    text-align: center;
-    font-size: 12px;
-    color: #6f7a85;
-    opacity: .9;
-    text-decoration: none
-}
-
-.login-dark form .forgot:active,
-.login-dark form .forgot:hover {
-    opacity: 1;
-    text-decoration: none
-}
-
 
 .text-center {
     color: black;
@@ -106,6 +118,6 @@ input[type='radio']:checked + label {
     border: 10px black solid;
 }
 
-label {
-    cursor: pointer;
+.countdown {
+    position: absolute;
 }

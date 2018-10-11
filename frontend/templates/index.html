@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalyst Photo Booth</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/webcam.css">
+    <link rel="stylesheet" href="/static/css/izitoast.min.css">
+</head>
+
+<body>
+    <div class="home-dark">
+        <div class="container section-wrap" id="start-wrap">
+            <div class="section-header">
+                <div class="section-title">HackGT</div>
+            </div>
+            <div class="section-body">
+                <div class="row">
+                    <div class="col">
+                        <h1 class="text-center">HackGT Photo Booth</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="start-photo-container">
+                            <button id="start-photo" class="btn btn-primary btn-block photo-btn">Start</button>
+                        </div>
+    <!-- 
+                        <form style="color:black;">
+                            <div class="form-group" style="margin-top: 4em;">
+                                <input id="phone" class="form-control" placeholder="Phone Number">
+                            </div>
+                            <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
+                                <option selected>Select Filter Style</option>
+                            </select> 
+                            <div class="row text-white text-center" style="font-size: 14px;">
+                                <h5>I acknowledge that receiving MMS may result in charges from my mobile carrier</h5>
+                            </div>
+                            <div class="form-group">
+                            </div> -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container section-wrap" id="take-wrap">
+            <div class="section-header">
+                <div class="section-title">Take a Photo</div>
+            </div>
+            <div class="section-body">
+                <div class="photobooth container">
+
+                    <div class="row justify-content-center">
+                        <div class="countdown" id="countdown"></div>
+                    </div>
+
+                    <canvas class="photo"></canvas>
+                    <video class="player"></video>
+                </div>
+
+            </div>
+            <div class="section-footer">
+                <div class="row justify-content-center">
+                    <div class="col">
+                        <button class="photo-btn photo-take" id="take-photo">Take Photo</button>
+                    </div>  
+                    <div class="col" id="take-check">
+                            <button class="photo-btn" id="retake-photo">Retake</button>
+                            <button class="photo-btn" id="confirm-photo">Looks Good</button>
+                    </div>
+                </div>
+                <!-- <button id="sendphoto" type="button" class="btn btn-primary">Send Photo</button> -->
+            </div>
+        </div>
+
+        <audio class="snap" src="http://wesbos.com/demos/photobooth/snap.mp3" hidden></audio>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="/static/js/izitoast.js"></script>
+    <script src="/static/js/countdown.js"></script>
+    <script src="/static/js/webcam.js"></script>
+    <script src="/static/js/processStyle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

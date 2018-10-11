@@ -7,6 +7,10 @@ const shutter = document.querySelector(".take-photo");
 const buttons = document.querySelectorAll("a");
 const effectControls = document.querySelectorAll(".controls");
 const colorizeControls = document.querySelectorAll('input[name="colorize"]');
+const backendUri = "https://128.61.105.52/";
+const requestFiltersUri = backendUri + "convert_encoded";
+const sendMessageUri = backendUri + "send_mms";
+
 var currentData = ''
 
 const getVideo = () => {
@@ -23,14 +27,12 @@ const getVideo = () => {
             console.error(`error`, err);
         });
 };
+
 let activeEffect = null;
 const handleControls = e => {
     e.preventDefault();
     const control = e.target.dataset.control;
-    if (control === "takePhoto") {
-        takePhoto();
-        return;
-    } else if (control === activeEffect) {
+    if (control === activeEffect) {
         activeEffect = null;
         buttons.forEach(button => button.classList.remove("active"));
         effectControls.forEach(controls => controls.classList.remove("active"));
@@ -45,6 +47,7 @@ const handleControls = e => {
         activeControls ? activeControls.classList.add("active") : null;
     }
 };
+
 const paintToCanvas = () => {
     const width = video.videoWidth;
     const height = video.videoHeight;
@@ -69,6 +72,8 @@ const paintToCanvas = () => {
 };
 
 const takePhoto = () => {
+    $("#photo-take").attr("disabled", true);
+    $('#countdown').show();
     $("#countdown").countdown360({
         radius: 60.5,
         seconds: 6,
@@ -81,19 +86,25 @@ const takePhoto = () => {
         onComplete: function () {
             snap.currentTime = 0;
             snap.play();
-
+            $('#countdown').hide();
+            $('#take-check').show();
+            /* Check photo */
             const data = canvas.toDataURL("image/jpeg");
             currentData = data;
-            const link = document.createElement("a");
-            link.href = data;
-            link.setAttribute("download", "photo");
-            link.classList.add("photo");
-            link.innerHTML = `<img src="${data}" alt="photo" />`;
-            strip.insertBefore(link, strip.firstChild);
+            // const link = document.createElement("a");
+            // link.href = data;
+            // link.setAttribute("download", "photo");
+            // link.classList.add("photo");
+            // link.innerHTML = `<img src="${data}" alt="photo" />`;
+            // // strip.insertBefore(link, strip.firstChild);
         }
     }).start()
-
 };
+
+const retakePhoto = () => {
+    $('#take-check').hide();
+    $('#photo-take').attr("disabled", false);
+}
 
 const colorize = pixels => {
     for (let i = 0; i < pixels.data.length; i += 4) {
@@ -147,51 +158,38 @@ const chromakey = pixels => {
 };
 
 $(document).ready(function () {
-    $('#takephoto').click(function (e) {
-        e.preventDefault()
-        if ($('#phone').val() && $('input[name=filter]:checked').val() !== 'Select Filter Style') {
-            $('#myModal').modal()
-            getVideo();
-        } else {
-            iziToast.error({
-                title: 'Error',
-                message: 'Fill out all fields'
-            });
-        }
-    })
+    $('#take-wrap').hide();
 
-    $('#sendphoto').click(function (e) {
-        e.preventDefault()
+    $('#start-photo').click(function (e) {
+        e.preventDefault();
+        getVideo();
+        $('#start-wrap').hide();
+        $('#take-wrap').show();
+        $('#take-confirm').hide();
+    });s
+
+    $('#take-photo').click(function (e) {
+        e.preventDefault();
+        takePhoto();
+    });
+
+    $('#take-confirm').click(function (e) {
+        e.preventDefault();
+        $('#take-wrap').hide();
+        // send the photo to the backend
         if (currentData) {
-            $.post("http://128.61.105.52/convert_encoded", JSON.stringify({
-                image_url: currentData,
-                style: $('input[name=filter]:checked').val()
+            $.post(requestFiltersUri, JSON.stringify({
+                image_url: currentData
             }), function (data, status) {
                 console.log(data, status)
                 if (status == "success") {
+                    $('#filter-wrap').trigger("ready");
                     iziToast.info({
                         title: 'FYI',
                         message: 'Photo processed!'
                     });
                     var url = data.url;
-                    $.post("http://128.61.105.52/send-mms", JSON.stringify({
-                        phone: $('#phone').val(),
-                        url: url
-                    }), function (data, status) {
-                        console.log(data, status)
-                        if (status == 'success') {
-                            iziToast.success({
-                                title: 'FYI',
-                                message: 'Photo messaged!'
-                            });
-                            window.location.reload();
-                        } else {
-                            iziToast.error({
-                                title: 'Error',
-                                message: 'Something went wrong'
-                            });
-                        }
-                    })
+                    
                 } else {
                     iziToast.error({
                         title: 'Error',
@@ -210,14 +208,37 @@ $(document).ready(function () {
                 message: 'No photo taken'
             });
         }
+        $('#filter-wrap').show();
+    });
+
+    $('#filter-confirm').click(function (e) {
+        e.preventDefault();
+        $('#filter-wrap').hide();
+        $('#deliver-wrap').show();
+    });
+
+    $('#send-confirm').click(function (e) {
+        $.post(sendMessageUri, JSON.stringify({
+            phone: $('#phone').val(),
+            url: url
+        }), function (data, status) {
+            console.log(data, status)
+            if (status == 'success') {
+                iziToast.success({
+                    title: 'FYI',
+                    message: 'Photo messaged!'
+                });
+                window.location.reload();
+            } else {
+                iziToast.error({
+                    title: 'Error',
+                    message: 'Something went wrong',
+                    style: $('input[name=filter]:checked').val()
+                });
+            }
+        });
     })
-})
+});
 
-let colorizeColor = [1, -1, -1];
-colorizeControls.forEach(input =>
-    input.addEventListener("change", handleColorize)
-);
-
-buttons.forEach(button => button.addEventListener("click", handleControls));
 video.addEventListener("canplay", paintToCanvas);
 
