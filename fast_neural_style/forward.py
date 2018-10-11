@@ -1,17 +1,5 @@
-import argparse
-import os
-import sys
-import time
-
-import numpy as np
 import torch
-from torch.autograd import Variable
 from torchvision import transforms
-
-from . import utils
-from .transformer_net import TransformerNet
-from .vgg import Vgg16
-
 
 def forward_pass(model, image, device = 'cuda', pipeline=None):
     if pipeline is None:
@@ -30,4 +18,3 @@ def forward_pass(model, image, device = 'cuda', pipeline=None):
     output_tensor = output_tensor.cpu()
 
     return output_tensor
-
