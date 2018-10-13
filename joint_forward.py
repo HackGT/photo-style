@@ -44,6 +44,12 @@ if __name__ == '__main__':
     starry.cuda()
     models.append(starry)
 
+    starry2 = TransformerNet()
+    starry2.load_state_dict(torch.load('models/starry_night/starry02.model'))
+    starry2.eval()
+    starry2.cuda()
+    models.append(starry2)
+
     neon = TransformerNet()
     neon.load_state_dict(torch.load('models/neon/neon01.model'))
     neon.eval()
@@ -54,18 +60,34 @@ if __name__ == '__main__':
 
     print("Loaded all models")
 
-
-    for i in range(1, 13):
+    import json
+    for i in range(11, 12):
         in_file = ('sources/catalyst/{:02d}.jpg'.format(i))
         print(in_file)
-        out_file = ('out_{:02d}.png'.format(i))
 
         input_im = style_utils.load_image(in_file, scale=1)
         numpy_image = np.array(input_im)
-        _, scored_masks, styled_images = segment_and_style(models, detectron, input_im)
-        if len(scored_masks) > 0:
-            mask = ~union_masks(scored_masks)
-            numpy_image, _, _ = apply_binary_mask(numpy_image, random.choice(styled_images), mask)
+        mask, scored_masks, styled_images = segment_and_style(models, detectron, input_im)
+        out_mask_name = 'mock_data/out_mask_{:02d}.jpg'.format(i)
+        # cv2.imwrite(out_mask_name, 16 * mask)
+        # mas
 
-        numpy_image = numpy_image[:, :, ::-1]
-        cv2.imwrite(out_file, numpy_image)
+        for j, mask in enumerate(scored_masks):
+            out_name = 'mock_data/out_mask_{:02d}_{:02d}.json'.format(j, i)
+            json.dump(mask.tolist(), open(out_name, 'w'))
+            # cv2.imwrite(out_name, im[:, :, ::-1])
+
+        for j, im in enumerate(styled_images):
+            out_name = 'mock_data/out_style_{:02d}_{:02d}.jpg'.format(j, i)
+            cv2.imwrite(out_name, im[:, :, ::-1])
+
+
+        # if len(scored_masks) > 0:
+            # mask = ~union_masks(scored_masks)
+            # numpy_image, _, _ = apply_binary_mask(numpy_image, random.choice(styled_images), mask)
+        # else:
+            # numpy_image = random.choice(styled_images)
+            # numpy_image, _, _ = apply_binary_mask(numpy_image, random.choice(styled_images), mask)
+
+        # numpy_image = numpy_image[:, :, ::-1]
+        # cv2.imwrite(out_file, numpy_image)
