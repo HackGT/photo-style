@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalyst Photo Booth</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/webcam.css">
+    <link rel="stylesheet" href="/assets/css/izitoast.min.css">
+</head>
+
+<body>
+    <div class="home-dark">
+        <div class="container section-wrap" id="start-wrap">
+            <div class="section-header">
+                <div class="section-title">HackGT</div>
+            </div>
+            <div class="section-body">
+                <div class="row">
+                    <div class="col">
+                        <h1 class="text-center">HackGT Photo Booth</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="start-photo-container">
+                            <button id="start-photo" class="btn btn-primary btn-block photo-btn">Start</button>
+                        </div>
+    <!-- 
+                        <form style="color:black;">
+                            <div class="form-group" style="margin-top: 4em;">
+                                <input id="phone" class="form-control" placeholder="Phone Number">
+                            </div>
+                            <select id="filter" style="border:none;" class="custom-select text-white bg-info custom-select-lg mb-3">
+                                <option selected>Select Filter Style</option>
+                            </select> 
+                            <div class="row text-white text-center" style="font-size: 14px;">
+                                <h5>I acknowledge that receiving MMS may result in charges from my mobile carrier</h5>
+                            </div>
+                            <div class="form-group">
+                            </div> -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container section-wrap" id="take-wrap">
+            <div class="section-header">
+                <div class="section-title">Take a Photo</div>
+                <button class="photo-btn restart-button" id="restart">Restart</button>
+            </div>
+            <div class="section-body booth">
+                <div class="container booth-left">
+                    <button class="photo-btn photo-take" id="take-photo">Cheese!</button>
+                    <div id="take-check">
+                        <button class="photo-btn" id="retake-photo">Take Another</button>
+                        <button class="photo-btn" id="confirm-photo">Looks Good!</button>
+                    </div>
+                    <div class="countdown-wrap" id="countdown-wrap">
+                        <div class="countdown" id="countdown"></div>
+                    </div>
+                </div>
+                <div class="container booth-right">
+                    <video id="video-player" class="photo"></video>
+                </div>
+            </div>
+                <!-- <button id="sendphoto" type="button" class="btn btn-primary">Send Photo</button> -->
+        </div>
+        <div style="display:none;">
+            <img id="source" src="/assets/images/source.jpg" />
+            <img id="filter1" src="/assets/images/filter1.jpg" />
+            <img id="filter2" src="/assets/images/filter2.jpg" />
+            <img id="filter3" src="/assets/images/filter3.jpg" />
+            <img id="filter4" src="/assets/images/filter4.jpg" />
+        </div>
+        <!-- TAKE THIS ^ OUT! -->
+        <div class="container section-wrap" id="filter-wrap">
+            <div class="section-header">
+                <div class="section-title">Make it Yours!</div>
+                <button class="photo-btn restart-button" id="restart">Restart</button>
+            </div>
+            <div class="section-body booth">
+                <div class="container booth-left">
+                    <div>
+                        <h5 class="underline"><strong>Pick a piece, choose a filter</strong></h5>
+                        <div class="list-group">
+                            <a href="#" data-filter="filter1" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Filter 1</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" src="/assets/images/filter1.jpg"/>
+                                </div>
+                            </a>
+                            <a href="#" data-filter="filter2" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Filter 2</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" src="/assets/images/filter2.jpg"/>
+                                </div>
+                            </a>
+                            <a href="#" data-filter="filter3" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Filter 3</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" src="/assets/images/filter3.jpg"/>
+                                </div>
+                            </a>
+                            <a href="#" data-filter="filter4" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Filter 4</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" src="/assets/images/filter4.jpg"/>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <button id="prompt-send" class="photo-btn photo-send">Get your photo!</button>
+                </div>
+                <div class="container booth-right">
+                    <canvas id="booth-photo" class="photo" ></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="send-modal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Get Your Photo</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <div class="form-group" style="margin-top: 3em;">
+                                <input id="phone" class="form-control" placeholder="Phone Number">
+                            </div>
+                            <div class="row text-center" style="font-size: 14px;">
+                                <h5>By sending the photo I acknowledge that receiving MMS may result in charges from my mobile carrier.</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="send-confirm" type="button" class="btn btn-primary">Send Photo</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <audio class="snap" src="http://wesbos.com/demos/photobooth/snap.mp3" hidden></audio>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="/assets/js/izitoast.js"></script>
+    <script src="/assets/js/countdown.js"></script>
+    <script src="/assets/js/webcam.js"></script>
+    <script src="/assets/js/processStyle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
