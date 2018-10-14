@@ -1,0 +1,126 @@
+/* @import url("https://fonts.googleapis.com/css?family=Roboto+Mono");
+html {
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: inherit;
+}
+*:before, *:after {
+  box-sizing: inherit;
+}
+
+html {
+  font-size: 10px;
+  background: linear-gradient(to bottom, #fff, #f2f2f2);
+  font-family: "Roboto Mono", monospace;
+  padding: 10px;
+  min-height: 100vh;
+}
+
+body:before {
+  content: "photobooth";
+  font-size: 10vmin;
+  top: 0;
+  letter-spacing: 2vmin;
+  position: absolute;
+  opacity: 0.1;
+  z-index: -1;
+} */
+
+.booth {
+  display: flex;
+  width: 100%;
+  max-height: 800px;
+  margin: 3vmin auto;
+  border-radius: 2px;
+}
+
+.booth-left {
+  width: 30%;
+  min-width: 320px;
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+.booth-left::-webkit-scrollbar {
+	width: 12px;
+	background-color: #888;
+}
+
+.booth-right {
+  width: auto;
+}
+
+.countdown-wrap {
+  width: 166px;
+  margin: 30px auto;
+}
+
+.photo {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  display: block;
+  width: 800px;
+  max-width: 80vw;
+  max-height: 80vh;
+  margin: auto;
+}
+
+.filter-option {
+  border: 1px solid #222;
+  border-radius: 4px;
+  color: #222;
+  margin-bottom: 10px;
+  max-height: 400px;
+  overflow: hidden;
+  padding: 3px;
+  padding: 5px 10px;
+}
+
+.filter-preview {
+  height: auto;
+  max-width: 90%;
+  margin: auto;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.filter-image {
+  width: 100%;
+  height: auto;
+}
+
+.filter-heading {
+  text-align: center;
+  font-weight: 700;
+  padding: 3px;
+  margin: auto;
+  width: 80%;
+}
+
+.filter-option.active, .filter-option:hover {
+  background: #222;
+  border: 2px solid #000;
+  color: #fff;
+}
+
+/*
+.controls {
+  display: none;
+  margin-bottom: 20px;
+}
+.controls.active {
+  display: block;
+}
+
+.strip {
+  padding: 2rem;
+}
+
+.strip img {
+  width: 100px;
+  overflow-x: scroll;
+  margin: 1%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+*/
