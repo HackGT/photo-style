@@ -143,6 +143,7 @@ $(document).ready(function () {
                 if (activeId != hoverId) {
                     activeId = hoverId;
                     applyActiveOutline();
+                    updateActiveFilter(activeId);
                 } else {
                     activeId = -1;
                     activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
@@ -184,6 +185,12 @@ $(document).ready(function () {
 
     // Filters
     $(".filter-option").click(e => {
+        if (activeId == -1) {
+            iziToast.info({
+                title: 'FYI',
+                message: 'Please select a part of the image!'
+            });
+        }
         e.preventDefault();
         // CSS handling
         const filter = e.target.dataset.filter;
