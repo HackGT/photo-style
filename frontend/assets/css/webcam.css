@@ -50,6 +50,7 @@ body:before {
 
 .booth-right {
   width: auto;
+  position: relative;
 }
 
 .countdown-wrap {
@@ -60,9 +61,6 @@ body:before {
 .photo {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   display: block;
-  width: 800px;
-  max-width: 80vw;
-  max-height: 80vh;
   margin: auto;
 }
 
@@ -104,6 +102,25 @@ body:before {
   color: #fff;
 }
 
+
+#hover-layer {
+  pointer-events: none;
+  top: 0;
+  left: 0;
+}
+
+#active-layer {
+  pointer-events: none;
+  top: 0;
+  left: 0;
+}
+
+.canvas {
+  display: block;
+  width: 800px;
+  max-width: 80vw;
+  max-height: 80vh;
+}
 /*
 .controls {
   display: none;
