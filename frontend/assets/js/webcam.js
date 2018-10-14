@@ -2,26 +2,24 @@
 const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
 const ctx = canvas.getContext("2d");
-const strip = document.querySelector(".strip");
+const activeCanvas = document.querySelector("#active-layer");
+const activeCtx = activeCanvas.getContext("2d");
+const hoverCanvas = document.querySelector("#hover-layer");
+const hoverCtx = hoverCanvas.getContext("2d");
+
 const snap = document.querySelector(".snap");
-const shutter = document.querySelector(".take-photo");
-const buttons = document.querySelectorAll("a");
-// const effectControls = document.querySelectorAll(".controls");
-// const colorizeControls = document.querySelectorAll('input[name="colorize"]');
 const backendUri = "https://128.61.105.52/";
 const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_mms";
 var currentFrame = '';
-var applyMask = () => {
-    console.error("Apply mask called before binding");
-};
+var applyMask = () => console.error("Apply mask called before binding");
+var applyActiveOutline = () => console.error("Apply active outline called before binding");
+var applyHoverOutline = () => console.error("Apply hover outline called before binding");
 
-// Gets mask id of hovered element if in canvas
-var hoveredId = 0;
-
-// Received from backend
-var activeFilter = "";
-// Q: will we receive same resolution? will backend send us another copy of no filter image?
+// Mask id of people/background
+var hoverId = -1; // - 1 is none
+var activeId = -1;
+var activeFilter = ""; // label of filter
 
 const getVideo = () => {
     navigator.mediaDevices
@@ -37,31 +35,6 @@ const getVideo = () => {
             console.error(`error`, err);
         });
 };
-
-/*
-const paintToCanvas = () => {
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    canvas.width = width;
-    canvas.height = height;
-
-    return setInterval(() => {
-        ctx.drawImage(video, 0, 0, width, height);
-        let pixels = ctx.getImageData(0, 0, width, height);
-        if (activeEffect === "colorize") {
-            ctx.globalAlpha = 1;
-            colorize(pixels);
-        } else if (activeEffect === "spectrascope") {
-            ctx.globalAlpha = 0.3;
-            spectrascope(pixels);
-        } else if (activeEffect === "chromakey") {
-            ctx.globalAlpha = 1;
-            chromakey(pixels);
-        }
-        ctx.putImageData(pixels, 0, 0);
-    }, 16);
-};
-*/
 
 const takePhoto = () => {
     filterData = '';
@@ -139,28 +112,47 @@ $(document).ready(function () {
         $('#take-wrap').hide();
         // connect to backend
         $.getJSON("/assets/images/mask1.json", function (data) {
+            const trackMouseCanvas = trackMouseCanvasBase.bind(this, data);
+            const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const flatMask = flatten(data); 
+            const flatFilters = [];
+            applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask); // right now active and hover the same...
+            applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
+            applyMask = applyMaskBase.bind(this, srcData, flatMask, flatFilters);
             // mock
             var img = new Image();
 
             img.onload = function(){
-                canvas.height = img.height;
                 canvas.width = img.width;
+                canvas.height = img.height;
+                hoverCanvas.width = img.width;
+                hoverCanvas.height = img.height;
+                activeCanvas.width = img.width;
+                activeCanvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
             }
 
             img.src = "/assets/images/source.jpg";
             var image = document.getElementById('source');
-            ctx.drawImage(image, 0, 0);
             // var filt1 = document.getElementById('filter1');
+            $("#booth-photo").mousemove( event => {
+                mouseDict = getMousePos(event);
+                trackMouseCanvas(mouseDict);
+            });
+            $('#booth-photo').click( event => {
+                if (activeId != hoverId) {
+                    activeId = hoverId;
+                    applyActiveOutline();
+                } else {
+                    activeId = -1;
+                    activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+                }
+            });
 
-            console.log(data.length);
-            console.log(data[0].length);
             const filters = [0, 1, 2];
-            applyMask = applyMaskBase.bind(this, ctx.getImageData(), data, data);
+            // So much is broken here
             $('#filter-wrap').show();
             $('#take-wrap').hide();
-            $.each(data, function (index, value) {
-               console.log(value);
-            });
         });
         
         
@@ -247,14 +239,55 @@ $(document).ready(function () {
         window.location.reload();
     });
 
-    // Handle outlines
-    $('#booth-photo').mouseover(() => {
-        
-        console.log("Entered");
-    }).mouseleave(() => {
-        console.log("left");
+    $('#booth-photo').mouseleave(() => {
+        hoverId = -1;
+        hoverCtx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
     })
 });
+
+const applyActiveOutlineBase = (maskData) => {
+    if (!maskData) {
+        console.error("Illegal call of applyActiveOutline");
+        return;
+    }
+
+    const pixels = activeCtx.getImageData(0, 0, activeCanvas.width, activeCanvas.height);
+    activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+    for (let i = 0; i < pixels.data.length / 4; i += 1) {
+        pixelIndex = 4 * i;
+        if (maskData[i] == activeId) {
+            // TODO: better colors
+            pixels.data[pixelIndex + 0] = 0;
+            pixels.data[pixelIndex + 1] = 0;
+            pixels.data[pixelIndex + 2] = 255;
+            pixels.data[pixelIndex + 3] = 255;
+        }
+    }
+    activeCtx.putImageData(pixels, 0, 0);
+}
+
+const applyHoverOutlineBase = (maskData) => {
+    if (!maskData) {
+        console.error("Illegal call of applyHoverOutline");
+        return;
+    }
+
+    const pixels = hoverCtx.getImageData(0, 0, hoverCanvas.width, hoverCanvas.height);
+    hoverCtx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
+    for (let i = 0; i < pixels.data.length / 4; i += 1) {
+        pixelIndex = 4 * i;
+        if (maskData[i] == hoverId) {
+            // TODO: get some better colors in here dear god
+            pixels.data[pixelIndex + 0] = 255;
+            pixels.data[pixelIndex + 1] = 0;
+            pixels.data[pixelIndex + 2] = 0;
+            pixels.data[pixelIndex + 3] = 255;
+        } else {
+            pixels.data[pixelIndex + 3] = 0;
+        }
+    }
+    hoverCtx.putImageData(pixels, 0, 0);
+}
 
 // Request data flattened
 const applyMaskBase = (baseData, maskData, filterData, filter) => {
@@ -262,18 +295,27 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
         console.error("Illegal call of applyMask");
         return;
     }
+
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    if (!filter) {
+     if (!filter) {
         ctx.putImageData(baseData, 0, 0);
         return;
     }
 
     for (let i = 0; i < pixels.data.length / 4; i += 1) {
-        if (maskData[i] == 1) { // TODO: sub in mask flag for figure
+        // For each pixel
+        // If outlines, apply set colors
+        pixelIndex = 4 * i;
+        if (maskData[i] == activeId) { // TODO: sub in actual filters
             pixelIndex = 4 * i;
+            pixels.data[pixelIndex + 0] = 0;
+            pixels.data[pixelIndex + 1] = 0;
+            pixels.data[pixelIndex + 2] = 0;
+            /*
             pixels.data[pixelIndex + 0] = filterData[pixelIndex][0];
             pixels.data[pixelIndex + 1] = filterData[pixelIndex][1];
             pixels.data[pixelIndex + 2] = filterData[pixelIndex][2];
+            */
         }
     }
     ctx.putImageData(pixels, 0, 0);
@@ -281,12 +323,33 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
 // video.addEventListener("canplay", paintToCanvas);
 
 
-// Track mouse and deal with outlines and updating hover piece
-function getMousePos(canvas, evt) {
+/* Track mouse and deal with outlines and updating hover piece */
+// Get mouse position in canvas, rounded
+function getMousePos(evt) {
     var rect = canvas.getBoundingClientRect();
     return {
-        x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
-        y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+        x: Math.round((evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width),
+        y: Math.round((evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height)
     };
 }
 
+// Sets hovered ID/tracks outline
+const trackMouseCanvasBase = (maskData, mouseDict) => {
+    if (!maskData) return;
+    shouldUpdate = hoverId != maskData[mouseDict.y][mouseDict.x];
+    hoverId = maskData[mouseDict.y][mouseDict.x];
+    if (shouldUpdate)
+        applyHoverOutline();
+}
+
+const flatten = function(arr, result = []) {
+    for (let i = 0, length = arr.length; i < length; i++) {
+        const value = arr[i];
+        if (Array.isArray(value)) {
+        flatten(value, result);
+        } else {
+        result.push(value);
+        }
+    }
+    return result;
+};
