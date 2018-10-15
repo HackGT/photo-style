@@ -1,4 +1,4 @@
-// TODO: provide ui for choosing part of image to filter (define filter function based on chocie)
+// TODO: link images to filters
 const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
 const ctx = canvas.getContext("2d");
@@ -19,7 +19,12 @@ var applyHoverOutline = () => console.error("Apply hover outline called before b
 // Mask id of people/background
 var hoverId = -1; // - 1 is none
 var activeId = -1;
-var activeFilter = ""; // label of filter
+var activeFilters = { // store of applied filters per key/entity
+    0: '',
+    1: '',
+    2: '',
+    3: '',
+};
 
 const getVideo = () => {
     navigator.mediaDevices
@@ -113,12 +118,11 @@ $(document).ready(function () {
         // connect to backend
         $.getJSON("/assets/images/mask1.json", function (data) {
             const trackMouseCanvas = trackMouseCanvasBase.bind(this, data);
-            const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const flatMask = flatten(data); 
-            const flatFilters = [];
-            applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask); // right now active and hover the same...
+            applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask);
             applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
-            applyMask = applyMaskBase.bind(this, srcData, flatMask, flatFilters);
+
+            // REMOVE BELOW
             // mock
             var img = new Image();
 
@@ -134,7 +138,12 @@ $(document).ready(function () {
 
             img.src = "/assets/images/source.jpg";
             var image = document.getElementById('source');
-            // var filt1 = document.getElementById('filter1');
+            // REMOVE THIS ^
+
+            const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const flatFilters = [1, 2, 3, 4];
+            applyMask = applyMaskBase.bind(this, flatten(srcData), flatMask, flatFilters);
+
             $("#booth-photo").mousemove( event => {
                 mouseDict = getMousePos(event);
                 trackMouseCanvas(mouseDict);
@@ -143,15 +152,13 @@ $(document).ready(function () {
                 if (activeId != hoverId) {
                     activeId = hoverId;
                     applyActiveOutline();
-                    updateActiveFilter(activeId);
                 } else {
                     activeId = -1;
                     activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
                 }
+                updateActiveFilter();
             });
 
-            const filters = [0, 1, 2];
-            // So much is broken here
             $('#filter-wrap').show();
             $('#take-wrap').hide();
         });
@@ -185,28 +192,34 @@ $(document).ready(function () {
 
     // Filters
     $(".filter-option").click(e => {
-        if (activeId == -1) {
+        e.preventDefault();
+
+        if (activeId === -1) {
             iziToast.info({
                 title: 'FYI',
                 message: 'Please select a part of the image!'
             });
+            return;
         }
-        e.preventDefault();
         // CSS handling
-        const filter = e.target.dataset.filter;
-        if (filter === activeFilter) {
-            activeFilter = null;
+        const activeFilter = activeFilters[activeId];
+        if (!e.target.dataset.filter) {
+            console.error("filter-option does not have data-filter");
+            console.log(e.target.dataset);
+        }
+        const filter = parseInt(e.target.dataset.filter.substr(6)); // trim 
+        if (filter === activeFilter) { // currently active filter clicked again
+            activeFilters[activeId] = "";
             e.target.classList.remove('active');
             applyMask();
         } else {
-            // disable active filter
             if (!!activeFilter) {
                 const activeNode = document.querySelector(
-                    `[data-filter=${activeFilter}]`
+                    `[data-filter=filter${activeFilter}]`
                 );
                 activeNode ? activeNode.classList.remove('active') : null;
             }
-            activeFilter = filter;
+            activeFilters[activeId] = filter;
             e.target.classList.add('active');
             applyMask(filter);
         }
@@ -257,9 +270,8 @@ const applyActiveOutlineBase = (maskData) => {
         console.error("Illegal call of applyActiveOutline");
         return;
     }
-
-    const pixels = activeCtx.getImageData(0, 0, activeCanvas.width, activeCanvas.height);
     activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+    const pixels = activeCtx.getImageData(0, 0, activeCanvas.width, activeCanvas.height);
     for (let i = 0; i < pixels.data.length / 4; i += 1) {
         pixelIndex = 4 * i;
         if (maskData[i] == activeId) {
@@ -279,8 +291,8 @@ const applyHoverOutlineBase = (maskData) => {
         return;
     }
 
-    const pixels = hoverCtx.getImageData(0, 0, hoverCanvas.width, hoverCanvas.height);
     hoverCtx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
+    const pixels = hoverCtx.getImageData(0, 0, hoverCanvas.width, hoverCanvas.height);
     for (let i = 0; i < pixels.data.length / 4; i += 1) {
         pixelIndex = 4 * i;
         if (maskData[i] == hoverId) {
@@ -297,6 +309,7 @@ const applyHoverOutlineBase = (maskData) => {
 }
 
 // Request data flattened
+// Note this must reference activeID TODO
 const applyMaskBase = (baseData, maskData, filterData, filter) => {
     if (!baseData || !maskData || !filterData) { // TODO: verify shape of data too
         console.error("Illegal call of applyMask");
@@ -304,10 +317,11 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
     }
 
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-     if (!filter) {
-        ctx.putImageData(baseData, 0, 0);
-        return;
-    }
+    
+    const filterSource = !!filter ? filterData[filter] : baseData;
+    // console.log(baseData.length);
+    // console.log(filterSource.length);
+    // console.log(filter);
 
     for (let i = 0; i < pixels.data.length / 4; i += 1) {
         // For each pixel
@@ -315,29 +329,39 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
         pixelIndex = 4 * i;
         if (maskData[i] == activeId) { // TODO: sub in actual filters
             pixelIndex = 4 * i;
-            pixels.data[pixelIndex + 0] = 0;
-            pixels.data[pixelIndex + 1] = 0;
-            pixels.data[pixelIndex + 2] = 0;
-            /*
-            pixels.data[pixelIndex + 0] = filterData[pixelIndex][0];
-            pixels.data[pixelIndex + 1] = filterData[pixelIndex][1];
-            pixels.data[pixelIndex + 2] = filterData[pixelIndex][2];
-            */
+            pixels.data[pixelIndex + 0] = !!filter ? 20 * filter : filterSource[i][0];
+            pixels.data[pixelIndex + 1] = !!filter ? 28 * filter : filterSource[i][1];
+            pixels.data[pixelIndex + 2] = !!filter ? 20 * filter : filterSource[i][2];
         }
     }
     ctx.putImageData(pixels, 0, 0);
 };
 // video.addEventListener("canplay", paintToCanvas);
 
-
-/* Track mouse and deal with outlines and updating hover piece */
-// Get mouse position in canvas, rounded
-function getMousePos(evt) {
-    var rect = canvas.getBoundingClientRect();
-    return {
-        x: Math.round((evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width),
-        y: Math.round((evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height)
-    };
+// This function makes sure the right option is shown to be active
+const updateActiveFilter = () => {
+    filterOption = document.querySelector('.filter-option.active');
+    if (activeId === -1) {
+        // disable current active and exit
+        if (filterOption)
+            filterOption.classList.remove('active');
+        return;   
+    }
+    console.log(filterOption);
+    const activeFilter = activeFilters[activeId];
+    if (filterOption) {
+        console.log('updating active filter, id then filter:', activeId, activeFilter);
+        if (parseInt(filterOption.dataset.filter) != activeFilter) {
+            filterOption.classList.remove('active');
+        } else return;
+    }
+    // add new active
+    if (activeFilter) {
+        const newActive = document.querySelector(
+            `[data-filter=filter${activeFilter}]`
+        );
+        newActive.classList.add('active');
+    }
 }
 
 // Sets hovered ID/tracks outline
@@ -347,6 +371,17 @@ const trackMouseCanvasBase = (maskData, mouseDict) => {
     hoverId = maskData[mouseDict.y][mouseDict.x];
     if (shouldUpdate)
         applyHoverOutline();
+}
+
+// Some util below
+/* Track mouse and deal with outlines and updating hover piece */
+// Get mouse position in canvas, rounded
+function getMousePos(evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: Math.round((evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width),
+        y: Math.round((evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height)
+    };
 }
 
 const flatten = function(arr, result = []) {
