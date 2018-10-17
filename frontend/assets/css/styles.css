@@ -70,8 +70,7 @@ body {
 /* TODO: put some color in here? */
 .photo-btn:active,
 .photo-btn:hover {
-    background: #214a80;
-    outline: 0;
+    background: #2a5ea2;
 }
 
 .home-dark .illustration {
@@ -128,9 +127,17 @@ input[type='radio']:checked + label {
     border-bottom: 2px solid white;
 }
 
-.restart-button {
-    width: 130px;
-    padding: 4px;
+.section-header .photo-btn {
+    margin: -6px;
+    padding: 6px;
     float: right;
-    margin: 0;
+    width: 180px;
+}
+
+#prompt-send {
+    margin-right: 15px;
+}
+
+.photo-btn:disabled {
+    color: gray;
 }
