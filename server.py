@@ -9,13 +9,15 @@ from PIL import Image
 from io import BytesIO
 import numpy as np
 import os
+import json
+import base64
 
 # from fast_neural_style.forward import forward_pass
 import DetectronPytorch.tools._init_paths
 from fast_neural_style.transformer_net import TransformerNet
 from DetectronPytorch.tools.wrapped_model import WrappedDetectron, union_masks, apply_binary_mask
 from joint_forward import segment_and_style
-from fast_neural_style.utils import get_image_stream
+from fast_neural_style.utils import get_image_stream, load_from_base64
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -42,13 +44,12 @@ def root():
     return send_from_directory('', 'test_index.html')
 
 
-@app.route('/convert', methods=['POST'])
+@app.route('/convert', methods=['POST', 'GET'])
 def convert():
     im = Image.open(request.files['file'])
     im = im.resize((int(im.size[0] / 1), int(im.size[1] / 1)), Image.LANCZOS)
     print(im)
     model_name = random.choice(model_names)
-    # def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     mask, scored_masks, styled_images = segment_and_style(models, detectron, im)
 
     numpy_image = np.array(im)
@@ -64,6 +65,28 @@ def convert():
     io_stream.seek(0)
     return send_file(io_stream, mimetype='image/PNG')
 
+@app.route('/convert_encoded', methods=['POST'])
+@cross_origin()
+def convert_encoded():
+    request_data = request.get_json(force=True)
+    im = load_from_base64(request_data['image'])
+
+    print(im)
+
+    model_name = random.choice(model_names)
+    mask, scored_masks, styled_images = segment_and_style(models, detectron, im)
+    print("Found {} people".format(len(scored_masks)))
+
+    numpy_image = np.array(im)
+
+    filter_payload = []
+    for image in styled_images:
+        i = Image.fromarray(image)
+        buffered = BytesIO()
+        i.save(buffered, format="JPEG")
+        filter_payload.append(base64.b64encode(buffered.getvalue()).decode('ascii'))
+
+    return jsonify({'filters' : filter_payload, 'mask' : mask.tolist()})
 
 def load_style_model(path_to_model):
     model = TransformerNet()
@@ -78,4 +101,4 @@ if __name__ == '__main__':
         model_map[model_name] = model
 
     print(model_map)
-    app.run(debug=False, port=8000)
+    app.run(debug=False, port=8080, host='0.0.0.0')

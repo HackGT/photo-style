@@ -38,6 +38,9 @@ def load_from_base64(base64_string):
     data = re.sub('^data:image/.+;base64,', '', base64_string)
     return Image.open(BytesIO(base64.b64decode(data)))
 
+# def encode_to_base64(image_array):
+
+
 
 def get_image_stream(output_tensor):
     image = get_image(output_tensor)

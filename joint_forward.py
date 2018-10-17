@@ -15,10 +15,11 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
         scored_masks = [m for m, _ in detectron.segment_people(numpy_image, mask_threshold)]
 
     #merge masks
-    mask = np.zeros(numpy_image.shape[:2])
+    mask = np.zeros(numpy_image.shape[:2], dtype=np.int8)
     if len(scored_masks) > 0:
         # pixel map where 0 is the background, 1 is the first person, etc
         for i, single_mask in enumerate(scored_masks):
+            mask[single_mask != 0] = 0
             mask += (i + 1) * single_mask
 
     styled_images = []
