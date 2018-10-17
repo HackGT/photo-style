@@ -81,39 +81,39 @@
             <div class="section-header">
                 <div class="section-title">Make it Yours!</div>
                 <button class="photo-btn restart-button" id="restart">Restart</button>
+                <button id="prompt-send" class="photo-btn photo-send">Get your photo!</button>
             </div>
             <div class="section-body booth">
                 <div class="container booth-left">
                     <div>
-                        <h5 class="underline"><strong>Pick a piece, choose a filter</strong></h5>
+                        <h5 class="underline"><strong>1. Pick a piece  2.Choose a filter</strong></h5>
                         <div class="list-group">
                             <a href="#" data-filter="filter1" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Filter 1</h5>
+                                <h5 class="mb-1 filter-heading underline">Starry Night</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" src="/assets/images/filter1.jpg"/>
+                                    <img class="filter-image" id="preview-1" src="/assets/images/filter1.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter2" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Filter 2</h5>
+                                <h5 class="mb-1 filter-heading underline">Starrier&trade; Night</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" src="/assets/images/filter2.jpg"/>
+                                    <img class="filter-image" id="preview-2" src="/assets/images/filter2.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter3" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Filter 3</h5>
+                                <h5 class="mb-1 filter-heading underline">Mosaic</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" src="/assets/images/filter3.jpg"/>
+                                    <img class="filter-image" id="preview-3" src="/assets/images/filter3.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter4" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Filter 4</h5>
+                                <h5 class="mb-1 filter-heading underline">Sunset</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" src="/assets/images/filter4.jpg"/>
+                                    <img class="filter-image" id="preview-4" src="/assets/images/filter4.jpg"/>
                                 </div>
                             </a>
                         </div>
                     </div>
-                    <button id="prompt-send" class="photo-btn photo-send">Get your photo!</button>
                 </div>
                 <div class="container booth-right">
                     <canvas id="booth-photo" class="photo canvas" ></canvas>

@@ -8,7 +8,7 @@ const hoverCanvas = document.querySelector("#hover-layer");
 const hoverCtx = hoverCanvas.getContext("2d");
 
 const snap = document.querySelector(".snap");
-const backendUri = "https://128.61.105.52/";
+const backendUri = "http://64.62.141.7:8080/";
 const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_mms";
 var currentFrame = '';
@@ -44,7 +44,7 @@ const getVideo = () => {
 const takePhoto = () => {
     filterData = '';
     currentFrame = '';
-    $("#photo-take").attr("disabled", true);
+    $("#take-photo").attr("disabled", true);
     $('#countdown-wrap').show();
     $("#countdown").countdown360({
         radius: 60.5,
@@ -65,7 +65,7 @@ const takePhoto = () => {
             // if we can't get preview, just send to backend, no preview stage
             $('#countdown-wrap').hide();
             $('#take-check').show();
-            $('#photo-take').hide();
+            $('#take-photo').hide();
             // link.setAttribute("download", "photo");
             // link.classList.add("photo");
             // link.innerHTML = `<img src="${data}" alt="photo" />`;
@@ -76,8 +76,8 @@ const takePhoto = () => {
 
 const retakePhoto = () => {
     $('#take-check').hide();
-    // $('#photo-take').attr("disabled", false); // This just isn't working
-    $('#photo-take').show();
+    $('#take-photo').attr("disabled", false); // This just isn't working
+    $('#take-photo').show();
     video.play();
 }
 
@@ -104,90 +104,111 @@ $(document).ready(function () {
 
     $('#confirm-photo').click(function (e) {
         e.preventDefault();
-    
-        // canvas.width = video.videoWidth; // BUG: why is this widening?
-        // canvas.height = video.videoHeight;
-        // create photo
-        // ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        
-        // Mocked
-        currentFrame = canvas.toDataURL();
-        currentFilter = "";
-        $('#filter-wrap').show();
-        $('#take-wrap').hide();
-        // connect to backend
-        $.getJSON("/assets/images/mask1.json", function (data) {
-            const trackMouseCanvas = trackMouseCanvasBase.bind(this, data);
-            const flatMask = flatten(data); 
-            applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask);
-            applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
-
-            // REMOVE BELOW
-            // mock
-            var img = new Image();
-
-            img.onload = function(){
-                canvas.width = img.width;
-                canvas.height = img.height;
-                hoverCanvas.width = img.width;
-                hoverCanvas.height = img.height;
-                activeCanvas.width = img.width;
-                activeCanvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-            }
-
-            img.src = "/assets/images/source.jpg";
-            var image = document.getElementById('source');
-            // REMOVE THIS ^
-
-            const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const flatFilters = [1, 2, 3, 4];
-            applyMask = applyMaskBase.bind(this, flatten(srcData), flatMask, flatFilters);
-
-            $("#booth-photo").mousemove( event => {
-                mouseDict = getMousePos(event);
-                trackMouseCanvas(mouseDict);
-            });
-            $('#booth-photo').click( event => {
-                if (activeId != hoverId) {
-                    activeId = hoverId;
-                    applyActiveOutline();
-                } else {
-                    activeId = -1;
-                    activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
-                }
-                updateActiveFilter();
-            });
-
-            $('#filter-wrap').show();
-            $('#take-wrap').hide();
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        currentFrame = canvas.toDataURL('image/jpeg', 1.0);
+        iziToast.success({
+            title: 'Photo Sent!',
+            message: 'Please hold',
+            timeout: 2000
         });
+        $('#confirm-photo').attr("disabled", true); // This just isn't working
+        // connect to backend
+        $.ajax({
+            type: "POST",
+            url: requestFiltersUri,
+            data: JSON.stringify({image: currentFrame}),    
+            timeout: 30000,
+            success: function (data, status) {
+                console.log(data, status);
+                if (status == "success") {
+                    iziToast.info({
+                        title: 'FYI',
+                        message: 'Photo processed!'
+                    });
+                    $('#filter-wrap').show();
+                    $('#take-wrap').hide();
+                    
+                    // Receive image data
+                    const { filters, mask } = data; // source 
+                    // console.log(mask);
+                    var img = new Image();
+                    const source = currentFrame;
+                    img.onload = function(){
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        hoverCanvas.width = img.width;
+                        hoverCanvas.height = img.height;
+                        activeCanvas.width = img.width;
+                        activeCanvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = source;
+                    // Load filters into imagedata
+                    const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                    // worried about some async bug here...
+                    const flatMask = flatten(mask);
+                    applyMask = applyMaskBase.bind(this, flatten(srcData), flatMask);
+                    
+                    Promise.all(filters.map((filterUri, index) => {
+                        const url = `data:image/jpeg;base64,${filterUri}`;
+                        const preview = document.getElementById(`preview-${index + 1}`);
+                        preview.src = url;
+                        return new Promise(resolve => {
+                            // hack for getting image data, fetch isn't returning proper shape
+                            var img = new Image();
+                            img.onload = () => {
+                                activeCtx.drawImage(img, 0, 0);
+                                const filterSrc = activeCtx.getImageData(0, 0, canvas.width, canvas.height).data;                            
+                                resolve(filterSrc);
+                            };
+                            img.src = url;
+                            // return fetch(url)  // pass in some data-uri
+                            // .then(function(response) {return response.arrayBuffer()})
+                            // .then(function(buffer) {
+                            //     return new Uint8Array(buffer);
+                            // });
+                        });
+                    }))
+                    .then((filterData) => {
+                        activeCtx.clearRect(0, 0, canvas.width, canvas.height);
+                        const flatFilters = filterData.map(im => flatten(im));
+                        applyMask = applyMask.bind(this, flatFilters);
+                    });
+
+                    const trackMouseCanvas = trackMouseCanvasBase.bind(this, mask);
+                    applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask);
+                    applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
         
-        
-        // $.post(requestFiltersUri, JSON.stringify({
-        //     image_url: canvas.toDataURL()
-        // }), function (data, status) {
-        //     console.log(data, status)
-        //     if (status == "success") {
-        //         iziToast.info({
-        //             title: 'FYI',
-        //             message: 'Photo processed!'
-        //         });
-        //         applyMask = applyMaskBase.bind(this, canvas.getImageData(), data.mask, data.filters);
-        //         $('#filter-wrap').show();
-        //         $('#take-wrap').hide();
-        //     } else {
-        //         iziToast.error({
-        //             title: 'Error',
-        //             message: 'Something went wrong'
-        //         });
-        //     }
-        // }).fail(function () {
-        //     iziToast.error({
-        //         title: 'Error',
-        //         message: 'Something went wrong'
-        //     });
-        // });
+                    $("#booth-photo").mousemove( event => {
+                        mouseDict = getMousePos(event);
+                        trackMouseCanvas(mouseDict);
+                    });
+                    $('#booth-photo').click( event => {
+                        if (activeId != hoverId) {
+                            activeId = hoverId;
+                            applyActiveOutline();
+                        } else {
+                            activeId = -1;
+                            activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+                        }
+                        updateActiveFilter();
+                    });
+                } else {
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Something went wrong'
+                    });
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                iziToast.error({
+                    title: 'Error',
+                    message: 'Something went wrong'
+                });
+            }
+        });
     });
 
     // Filters
@@ -221,7 +242,7 @@ $(document).ready(function () {
             }
             activeFilters[activeId] = filter;
             e.target.classList.add('active');
-            applyMask(filter);
+            applyMask(filter - 1);
         }
     });
 
@@ -315,10 +336,9 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
         console.error("Illegal call of applyMask");
         return;
     }
-
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
-    const filterSource = !!filter ? filterData[filter] : baseData;
+    const filterSource = (filter !== undefined) ? filterData[filter] : baseData;
     // console.log(baseData.length);
     // console.log(filterSource.length);
     // console.log(filter);
@@ -329,9 +349,9 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
         pixelIndex = 4 * i;
         if (maskData[i] == activeId) { // TODO: sub in actual filters
             pixelIndex = 4 * i;
-            pixels.data[pixelIndex + 0] = !!filter ? 20 * filter : filterSource[i][0];
-            pixels.data[pixelIndex + 1] = !!filter ? 28 * filter : filterSource[i][1];
-            pixels.data[pixelIndex + 2] = !!filter ? 20 * filter : filterSource[i][2];
+            pixels.data[pixelIndex + 0] = filterSource[pixelIndex + 0];
+            pixels.data[pixelIndex + 1] = filterSource[pixelIndex + 1];
+            pixels.data[pixelIndex + 2] = filterSource[pixelIndex + 2];
         }
     }
     ctx.putImageData(pixels, 0, 0);
