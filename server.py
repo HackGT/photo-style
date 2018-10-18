@@ -121,7 +121,7 @@ def prepare_final():
     from_email = Email(os.environ["FROM_EMAIL"])
     to_email = Email(email)
     subject = "HackGT5: Dare to Venture - Photobooth Link"
-    content = Content("text/plain", "Here's a link to your photo: {}".format(gcloud_link))
+    content = Content("text/html", '<a href="{}">Here</a> is a link to your photo. Have a nice day!'.format(gcloud_link))
     mail = Mail(from_email, subject, to_email, content)
     response = sg.client.mail.send.post(request_body=mail.get())
     # print(response.status_code)
