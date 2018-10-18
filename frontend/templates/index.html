@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalyst Photo Booth</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <link rel="stylesheet" href="/assets/css/webcam.css">
-    <link rel="stylesheet" href="/assets/css/izitoast.min.css">
+    <link rel="stylesheet" href="/static/assets/css/styles.css">
+    <link rel="stylesheet" href="/static/assets/css/webcam.css">
+    <link rel="stylesheet" href="/static/assets/css/izitoast.min.css">
 </head>
 
 <body>
@@ -65,18 +65,12 @@
                 </div>
                 <div class="container booth-right">
                     <video id="video-player" class="photo"></video>
+                    <canvas id="preview-photo" class="photo photo-verify" ></canvas>
+                    
                 </div>
             </div>
                 <!-- <button id="sendphoto" type="button" class="btn btn-primary">Send Photo</button> -->
         </div>
-        <div style="display:none;">
-            <img id="source" src="/assets/images/source.jpg" />
-            <img id="filter1" src="/assets/images/filter1.jpg" />
-            <img id="filter2" src="/assets/images/filter2.jpg" />
-            <img id="filter3" src="/assets/images/filter3.jpg" />
-            <img id="filter4" src="/assets/images/filter4.jpg" />
-        </div>
-        <!-- TAKE THIS ^ OUT! -->
         <div class="container section-wrap" id="filter-wrap">
             <div class="section-header">
                 <div class="section-title">Make it Yours!</div>
@@ -91,25 +85,25 @@
                             <a href="#" data-filter="filter1" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
                                 <h5 class="mb-1 filter-heading underline">Starry Night</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-1" src="/assets/images/filter1.jpg"/>
+                                    <img class="filter-image" id="preview-1" src="/static/assets/images/filter1.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter2" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
                                 <h5 class="mb-1 filter-heading underline">Starrier&trade; Night</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-2" src="/assets/images/filter2.jpg"/>
+                                    <img class="filter-image" id="preview-2" src="/static/assets/images/filter2.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter3" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
                                 <h5 class="mb-1 filter-heading underline">Mosaic</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-3" src="/assets/images/filter3.jpg"/>
+                                    <img class="filter-image" id="preview-3" src="/static/assets/images/filter3.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter4" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
                                 <h5 class="mb-1 filter-heading underline">Sunset</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-4" src="/assets/images/filter4.jpg"/>
+                                    <img class="filter-image" id="preview-4" src="/static/assets/images/filter4.jpg"/>
                                 </div>
                             </a>
                         </div>
@@ -135,10 +129,10 @@
                     <div class="modal-body">
                         <div class="container">
                             <div class="form-group" style="margin-top: 3em;">
-                                <input id="phone" class="form-control" placeholder="Phone Number">
+                                <input id="email" class="form-control" placeholder="Email">
                             </div>
                             <div class="row text-center" style="font-size: 14px;">
-                                <h5>By sending the photo I acknowledge that receiving MMS may result in charges from my mobile carrier.</h5>
+                                <h5>You'll get an email shortly!</h5>
                             </div>
                         </div>
                     </div>
@@ -152,10 +146,10 @@
         <audio class="snap" src="http://wesbos.com/demos/photobooth/snap.mp3" hidden></audio>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="/assets/js/izitoast.js"></script>
-    <script src="/assets/js/countdown.js"></script>
-    <script src="/assets/js/webcam.js"></script>
-    <script src="/assets/js/processStyle.js"></script>
+    <script src="/static/assets/js/izitoast.js"></script>
+    <script src="/static/assets/js/countdown.js"></script>
+    <script src="/static/assets/js/webcam.js"></script>
+    <script src="/static/assets/js/processStyle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
 </body>
 
