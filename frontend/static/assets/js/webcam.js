@@ -171,6 +171,8 @@ $(document).ready(function () {
                     // Receive image data
                     const { filters, mask, source } = data; // source 
                     // console.log(mask);
+                    // note mask is outline offset, copy
+                    const normalMask = mask.map(maskRow => maskRow.map(e => e % OUTLINE_OFFSET));
                     var img = new Image();
                     img.onload = function(){
                         canvas.width = img.width;
@@ -186,7 +188,8 @@ $(document).ready(function () {
                     const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
                     // worried about some async bug here...
                     const flatMask = flatten(mask);
-                    applyMask = applyMaskBase.bind(this, flatten(srcData), flatMask);
+                    applyMask = applyMaskBase.bind(this, flatten(srcData), normalMask);
+                    const trackMouseCanvas = trackMouseCanvasBase.bind(this, normalMask);
                     
                     Promise.all(filters.map((filterUri, index) => {
                         const url = `data:image/jpeg;base64,${filterUri}`;
@@ -214,10 +217,9 @@ $(document).ready(function () {
                         applyMask = applyMask.bind(this, flatFilters);
                     });
                     // const mask  BOOKMARK
-                    const trackMouseCanvas = trackMouseCanvasBase.bind(this, mask);
                     const outlineMask = flatMask.map(el => el - OUTLINE_OFFSET);
-                    applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask);
-                    applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
+                    applyActiveOutline = applyActiveOutlineBase.bind(this, outlineMask);
+                    applyHoverOutline = applyHoverOutlineBase.bind(this, outlineMask);
         
                     $("#booth-photo").mousemove( event => {
                         mouseDict = getMousePos(event);
