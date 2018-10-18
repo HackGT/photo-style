@@ -1,7 +1,9 @@
 // TODO: link images to filters
 const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
+const previewCanvas = document.querySelector('#preview-photo');
 const ctx = canvas.getContext("2d");
+const previewCtx = canvas.getContext("2d");
 const activeCanvas = document.querySelector("#active-layer");
 const activeCtx = activeCanvas.getContext("2d");
 const hoverCanvas = document.querySelector("#hover-layer");
@@ -11,7 +13,9 @@ const snap = document.querySelector(".snap");
 const backendUri = "http://64.62.141.7:8080/";
 const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_mms";
+const takePhotoUri = '/capture';
 var currentFrame = '';
+const OUTLINE_OFFSET = 100;
 var applyMask = () => console.error("Apply mask called before binding");
 var applyActiveOutline = () => console.error("Apply active outline called before binding");
 var applyHoverOutline = () => console.error("Apply hover outline called before binding");
@@ -63,9 +67,39 @@ const takePhoto = () => {
             // await response and move on to preview
             // assume we have image in next stage
             // if we can't get preview, just send to backend, no preview stage
+            
             $('#countdown-wrap').hide();
             $('#take-check').show();
             $('#take-photo').hide();
+            $('#video-player').hide();
+            $('#preview-photo').show();
+
+            $.ajax({
+                type: "POST",
+                url: takePhotoUri,
+                timeout: 3000,
+                success: function (data, status) {
+                    console.log(data, status);
+                    if (status == "success") {
+                        const { image } = data;
+                        const img = new Image();
+                        const url = `data:image/jpeg;base64,${image}`;
+                        img.onload = function(){
+                            previewCanvas.width = img.width;
+                            previewCanvas.height = img.height;
+                            previewCtx.drawImage(img, 0, 0);
+                        };
+                        img.src = url;
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Photo taking failed'
+                    });
+                }
+            });
+    
             // link.setAttribute("download", "photo");
             // link.classList.add("photo");
             // link.innerHTML = `<img src="${data}" alt="photo" />`;
@@ -78,6 +112,8 @@ const retakePhoto = () => {
     $('#take-check').hide();
     $('#take-photo').attr("disabled", false); // This just isn't working
     $('#take-photo').show();
+    $('video-player').show();
+    $('preview-photo').hide();
     video.play();
 }
 
@@ -104,10 +140,12 @@ $(document).ready(function () {
 
     $('#confirm-photo').click(function (e) {
         e.preventDefault();
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-        currentFrame = canvas.toDataURL('image/jpeg', 1.0);
+        // canvas.width = video.videoWidth;
+        // canvas.height = video.videoHeight;
+        canvas.width = previewCanvas.width;
+        canvas.height = previewCanvas.height;
+        ctx.drawImage(previewCanvas, 0, 0);
+        currentFrame = canvas.toDataURL('image/jpeg', 1.0); // this is only temp, will be overwritten when we get low res from server
         iziToast.success({
             title: 'Photo Sent!',
             message: 'Please hold',
@@ -131,10 +169,9 @@ $(document).ready(function () {
                     $('#take-wrap').hide();
                     
                     // Receive image data
-                    const { filters, mask } = data; // source 
+                    const { filters, mask, source } = data; // source 
                     // console.log(mask);
                     var img = new Image();
-                    const source = currentFrame;
                     img.onload = function(){
                         canvas.width = img.width;
                         canvas.height = img.height;
@@ -176,8 +213,9 @@ $(document).ready(function () {
                         const flatFilters = filterData.map(im => flatten(im));
                         applyMask = applyMask.bind(this, flatFilters);
                     });
-
+                    // const mask  BOOKMARK
                     const trackMouseCanvas = trackMouseCanvasBase.bind(this, mask);
+                    const outlineMask = flatMask.map(el => el - OUTLINE_OFFSET);
                     applyActiveOutline = applyActiveOutlineBase.bind(this, flatMask);
                     applyHoverOutline = applyHoverOutlineBase.bind(this, flatMask);
         
