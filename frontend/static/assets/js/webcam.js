@@ -3,7 +3,7 @@ const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
 const previewCanvas = document.querySelector('#preview-photo');
 const ctx = canvas.getContext("2d");
-const previewCtx = canvas.getContext("2d");
+const previewCtx = previewCanvas.getContext("2d");
 const activeCanvas = document.querySelector("#active-layer");
 const activeCtx = activeCanvas.getContext("2d");
 const hoverCanvas = document.querySelector("#hover-layer");
@@ -71,13 +71,11 @@ const takePhoto = () => {
             $('#countdown-wrap').hide();
             $('#take-check').show();
             $('#take-photo').hide();
-            $('#video-player').hide();
-            $('#preview-photo').show();
-
+            
             $.ajax({
                 type: "POST",
                 url: takePhotoUri,
-                timeout: 3000,
+                timeout: 10000,
                 success: function (data, status) {
                     console.log(data, status);
                     if (status == "success") {
@@ -90,6 +88,8 @@ const takePhoto = () => {
                             previewCtx.drawImage(img, 0, 0);
                         };
                         img.src = url;
+			$('#video-player').hide();
+            		$('#preview-photo').show();
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
@@ -127,6 +127,7 @@ $(document).ready(function () {
         getVideo();
         $('#start-wrap').hide();
         $('#take-wrap').show();
+	$('#preview-photo').hide();
         $('#take-check').hide();
     });
 
@@ -217,7 +218,7 @@ $(document).ready(function () {
                         applyMask = applyMask.bind(this, flatFilters);
                     });
                     // const mask  BOOKMARK
-                    const outlineMask = flatMask.map(el => el - OUTLINE_OFFSET);
+                    const outlineMask = flatMask.map(el => el);// - OUTLINE_OFFSET);
                     applyActiveOutline = applyActiveOutlineBase.bind(this, outlineMask);
                     applyHoverOutline = applyHoverOutlineBase.bind(this, outlineMask);
         
