@@ -1,4 +1,4 @@
-// TODO: link images to filters
+// TODO: video as fallback as dslr
 const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
 const previewCanvas = document.querySelector('#preview-photo');
@@ -294,10 +294,14 @@ $(document).ready(function () {
     
 
     $('#send-confirm').click(function (e) {
-        const url = canvas.toDataURL(); // TODO: make sure this is right
+        // const url = canvas.toDataURL(); // TODO: make sure this is right
+        const mixDict = activeFilters;
+        for (entity in activeFilters) {
+            activeFilters[entity] = activeFilters[entity] - 1; // stupid html offset
+        }
         $.post(sendMessageUri, JSON.stringify({
-            phone: $('#phone').val(),
-            url: url
+            email: $('#email').val(),
+            mixInfo: mixDict
         }), function (data, status) {
             console.log(data, status)
             if (status == 'success') {
