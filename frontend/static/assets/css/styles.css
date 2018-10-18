@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'One Day';
-    src: url('https://storage.googleapis.com/hackgt/fonts/ONEDAY.ttf');
+    src: url('/static/assets/Hamurz.ttf');
 }
 
 body {
