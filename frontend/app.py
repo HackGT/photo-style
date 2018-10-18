@@ -5,7 +5,9 @@ import sys
 import logging
 import requests
 
-# import gphoto2 as gp
+import base64
+
+import gphoto2 as gp
 
 from PIL import Image
 from io import BytesIO
@@ -30,8 +32,8 @@ def take_photo():
     im.save(image_stream, 'JPEG')
     # image_stream.seek(0)
     
-    image_base64 = base64.b64encode(image.getvalue()).decode('ascii')
-    
+    image_base64 = base64.b64encode(image_stream.getvalue()).decode('ascii')
+
     return jsonify({'image': image_base64})
 
     # gp.check_result(gp.gp_camera_exit(camera))
