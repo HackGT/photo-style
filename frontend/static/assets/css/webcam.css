@@ -118,7 +118,7 @@ body:before {
   display: block;
   width: 800px;
   max-width: 80vw;
-  max-height: 80vh;
+  /* max-height: 80vh; */
   left: 1em;
 }
 

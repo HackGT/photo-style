@@ -1,4 +1,4 @@
-// TODO: video as fallback as dslr
+// TODO: nfc for auto fill email
 const video = document.querySelector("#video-player");
 const canvas = document.querySelector("#booth-photo");
 const previewCanvas = document.querySelector('#preview-photo');
@@ -12,7 +12,7 @@ const hoverCtx = hoverCanvas.getContext("2d");
 const snap = document.querySelector(".snap");
 const backendUri = "http://64.62.141.7:8080/";
 const requestFiltersUri = backendUri + "convert_encoded";
-const sendMessageUri = backendUri + "send_mms";
+const sendMessageUri = backendUri + "send_email";
 const takePhotoUri = '/capture';
 var currentFrame = '';
 const OUTLINE_OFFSET = 100;
@@ -23,12 +23,7 @@ var applyHoverOutline = () => console.error("Apply hover outline called before b
 // Mask id of people/background
 var hoverId = -1; // - 1 is none
 var activeId = -1;
-var activeFilters = { // store of applied filters per key/entity
-    0: '',
-    1: '',
-    2: '',
-    3: '',
-};
+var activeFilters = {}; // store of applied filters ids, keyed by entity mask id
 
 const getVideo = () => {
     navigator.mediaDevices
@@ -63,11 +58,6 @@ const takePhoto = () => {
             snap.currentTime = 0;
             snap.play();
             video.pause();
-            // Alternatively, call '/capture' here (if we want countdown)
-            // await response and move on to preview
-            // assume we have image in next stage
-            // if we can't get preview, just send to backend, no preview stage
-            
             $('#countdown-wrap').hide();
             $('#take-check').show();
             $('#take-photo').hide();
@@ -77,8 +67,8 @@ const takePhoto = () => {
                 url: takePhotoUri,
                 timeout: 10000,
                 success: function (data, status) {
-                    console.log(data, status);
-                    if (status == "success") {
+                    // console.log(data, status);
+                    if (data.image !== "" && status == "success") {
                         const { image } = data;
                         const img = new Image();
                         const url = `data:image/jpeg;base64,${image}`;
@@ -88,29 +78,31 @@ const takePhoto = () => {
                             previewCtx.drawImage(img, 0, 0);
                         };
                         img.src = url;
-			$('#video-player').hide();
-            		$('#preview-photo').show();
+                        $('#video-player').hide();
+                        $('#preview-photo').show();
+                    } else {
+                        previewCanvas.width = video.videoWidth;
+                        previewCanvas.height = video.videoHeight;
+                        previewCtx.drawImage(video, 0, 0 );
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     iziToast.error({
                         title: 'Error',
-                        message: 'Photo taking failed'
+                        message: 'DSLR taking failed, fallback to webcam'
                     });
+                    previewCanvas.width = video.videoWidth;
+                    previewCanvas.height = video.videoHeight;
+                    previewCtx.drawImage(video, 0, 0);
                 }
             });
-    
-            // link.setAttribute("download", "photo");
-            // link.classList.add("photo");
-            // link.innerHTML = `<img src="${data}" alt="photo" />`;
-            // // strip.insertBefore(link, strip.firstChild);
         }
     }).start()
 };
 
 const retakePhoto = () => {
     $('#take-check').hide();
-    $('#take-photo').attr("disabled", false); // This just isn't working
+    $('#take-photo').attr("disabled", false);
     $('#take-photo').show();
     $('video-player').show();
     $('preview-photo').hide();
@@ -129,6 +121,7 @@ $(document).ready(function () {
         $('#take-wrap').show();
 	$('#preview-photo').hide();
         $('#take-check').hide();
+        $('video-player').hide();
     });
 
     $('#take-photo').click(function (e) {
@@ -141,8 +134,6 @@ $(document).ready(function () {
 
     $('#confirm-photo').click(function (e) {
         e.preventDefault();
-        // canvas.width = video.videoWidth;
-        // canvas.height = video.videoHeight;
         canvas.width = previewCanvas.width;
         canvas.height = previewCanvas.height;
         ctx.drawImage(previewCanvas, 0, 0);
@@ -160,7 +151,7 @@ $(document).ready(function () {
             data: JSON.stringify({image: currentFrame}),    
             timeout: 30000,
             success: function (data, status) {
-                console.log(data, status);
+                // console.log(data, status);
                 if (status == "success") {
                     iziToast.info({
                         title: 'FYI',
@@ -172,56 +163,61 @@ $(document).ready(function () {
                     // Receive image data
                     const { filters, mask, source } = data; // source 
                     // console.log(mask);
-                    // note mask is outline offset, copy
-                    const normalMask = mask.map(maskRow => maskRow.map(e => e % OUTLINE_OFFSET));
-                    var img = new Image();
-                    img.onload = function(){
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        hoverCanvas.width = img.width;
-                        hoverCanvas.height = img.height;
-                        activeCanvas.width = img.width;
-                        activeCanvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                    };
-                    img.src = source;
-                    // Load filters into imagedata
-                    const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                    // worried about some async bug here...
+                    // mask has outline info, normalMask merges outline and region
+                    const normalMask = mask.map(maskRow => maskRow.map(e => e % OUTLINE_OFFSET)); 
+                    const trackMouseCanvas = trackMouseCanvasBase.bind(this, normalMask); // mouse cares about regions only
+                    const flatNormal = flatten(normalMask);
                     const flatMask = flatten(mask);
-                    applyMask = applyMaskBase.bind(this, flatten(srcData), normalMask);
-                    const trackMouseCanvas = trackMouseCanvasBase.bind(this, normalMask);
-                    
-                    Promise.all(filters.map((filterUri, index) => {
-                        const url = `data:image/jpeg;base64,${filterUri}`;
-                        const preview = document.getElementById(`preview-${index + 1}`);
-                        preview.src = url;
-                        return new Promise(resolve => {
-                            // hack for getting image data, fetch isn't returning proper shape
-                            var img = new Image();
-                            img.onload = () => {
-                                activeCtx.drawImage(img, 0, 0);
-                                const filterSrc = activeCtx.getImageData(0, 0, canvas.width, canvas.height).data;                            
-                                resolve(filterSrc);
-                            };
-                            img.src = url;
-                            // return fetch(url)  // pass in some data-uri
-                            // .then(function(response) {return response.arrayBuffer()})
-                            // .then(function(buffer) {
-                            //     return new Uint8Array(buffer);
-                            // });
-                        });
-                    }))
-                    .then((filterData) => {
-                        activeCtx.clearRect(0, 0, canvas.width, canvas.height);
-                        const flatFilters = filterData.map(im => flatten(im));
-                        applyMask = applyMask.bind(this, flatFilters);
+
+                    const loadSource = new Promise(resolve => {
+                        // hack for getting image data, fetch isn't returning proper shape
+                        var img = new Image();
+                        img.onload = function(){
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            hoverCanvas.width = img.width;
+                            hoverCanvas.height = img.height;
+                            activeCanvas.width = img.width;
+                            activeCanvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            const srcData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                            applyMask = applyMaskBase.bind(this, flatten(srcData), flatNormal); // apply mask cares about normal region
+                            resolve();
+                        };
+                        // img.src = source; // COMMENT BACK IN TO USE DSLR SOURCE
+                        img.src = currentFrame;
                     });
-                    // const mask  BOOKMARK
-                    const outlineMask = flatMask.map(el => el);// - OUTLINE_OFFSET);
+
+                    applyMask = applyMaskBase.bind(this, flatten(ctx.getImageData(0, 0, canvas.width, canvas.height).data), flatNormal); // default to video feed (will get overwritten)
+
+                    const outlineMask = flatMask;//.map(el => el - OUTLINE_OFFSET); // -> only preserve outline pixels
                     applyActiveOutline = applyActiveOutlineBase.bind(this, outlineMask);
                     applyHoverOutline = applyHoverOutlineBase.bind(this, outlineMask);
         
+                    // Load filters into imagedata
+                    loadSource.then(() => {
+                        Promise.all(filters.map((filterUri, index) => {
+                            const url = `data:image/jpeg;base64,${filterUri}`;
+                            const preview = document.getElementById(`preview-${index + 1}`);
+                            preview.src = url;
+                            return new Promise(resolve => {
+                                // hack for getting image data, fetch isn't returning proper shape
+                                var img = new Image();
+                                img.onload = () => {
+                                    activeCtx.drawImage(img, 0, 0);
+                                    const filterSrc = activeCtx.getImageData(0, 0, canvas.width, canvas.height).data;                            
+                                    resolve(filterSrc);
+                                };
+                                img.src = url;
+                            });
+                        }))
+                        .then((filterData) => {
+                            activeCtx.clearRect(0, 0, canvas.width, canvas.height);
+                            const flatFilters = filterData.map(im => flatten(im));
+                            applyMask = applyMask.bind(this, flatFilters);
+                        });
+                    });
+                    
                     $("#booth-photo").mousemove( event => {
                         mouseDict = getMousePos(event);
                         trackMouseCanvas(mouseDict);
@@ -295,10 +291,10 @@ $(document).ready(function () {
     
 
     $('#send-confirm').click(function (e) {
-        // const url = canvas.toDataURL(); // TODO: make sure this is right
         const mixDict = activeFilters;
-        for (entity in activeFilters) {
-            activeFilters[entity] = activeFilters[entity] - 1; // stupid html offset
+        for (entity in mixDict) {
+            if (mixDict[entity] === "") // No filter
+                mixDict[entity] = -1;
         }
         $.post(sendMessageUri, JSON.stringify({
             email: $('#email').val(),
@@ -401,9 +397,7 @@ const applyMaskBase = (baseData, maskData, filterData, filter) => {
     }
     ctx.putImageData(pixels, 0, 0);
 };
-// video.addEventListener("canplay", paintToCanvas);
 
-// This function makes sure the right option is shown to be active
 const updateActiveFilter = () => {
     filterOption = document.querySelector('.filter-option.active');
     if (activeId === -1) {
@@ -412,15 +406,14 @@ const updateActiveFilter = () => {
             filterOption.classList.remove('active');
         return;   
     }
-    console.log(filterOption);
+    // console.log(filterOption);
     const activeFilter = activeFilters[activeId];
     if (filterOption) {
-        console.log('updating active filter, id then filter:', activeId, activeFilter);
+        // console.log('updating active filter, id then filter:', activeId, activeFilter);
         if (parseInt(filterOption.dataset.filter) != activeFilter) {
             filterOption.classList.remove('active');
         } else return;
     }
-    // add new active
     if (activeFilter) {
         const newActive = document.querySelector(
             `[data-filter=filter${activeFilter}]`
@@ -453,9 +446,9 @@ const flatten = function(arr, result = []) {
     for (let i = 0, length = arr.length; i < length; i++) {
         const value = arr[i];
         if (Array.isArray(value)) {
-        flatten(value, result);
+            flatten(value, result);
         } else {
-        result.push(value);
+            result.push(value);
         }
     }
     return result;

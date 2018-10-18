@@ -5,6 +5,14 @@ import re
 import random
 from flask import Flask, request, send_file, jsonify, send_from_directory
 from flask_cors import CORS, cross_origin
+import sendgrid
+import os
+from sendgrid.helpers.mail import *
+
+from google.cloud import storage
+from dotenv import load_dotenv
+load_dotenv()
+
 from PIL import Image
 from io import BytesIO
 import numpy as np
@@ -22,7 +30,6 @@ from fast_neural_style.utils import get_image_stream, load_from_base64
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
 models = []
 model_names = [
     'starry night',
@@ -87,6 +94,41 @@ def convert_encoded():
         filter_payload.append(base64.b64encode(buffered.getvalue()).decode('ascii'))
 
     return jsonify({'filters' : filter_payload, 'mask' : mask.tolist()})
+
+@app.route('/send_email', methods=['POST'])
+@cross_origin()
+def prepare_final():
+    request_data = request.get_json(force=True)
+    print(request_data)
+    email = request_data['email']
+    mix_info = request_data['mixInfo']
+    # Comment this back in when hooking up to frontend
+    # if not email or not mix_info:
+        # return jsonify({'error': "Corrupted mix info"})
+    # EDIT HERE
+    final_filename = "cheetos01.png" # high_res_mix(mix_info) # fill in this
+    # final_res should be in file_name - rename to some unique identifier PER photo
+    # bucket initialized from console
+    bucket_name = os.environ['CLOUD_BUCKET']
+    object_name = final_filename # some unique identifier based off of final_res
+    client = storage.Client()
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(object_name)
+    blob.upload_from_filename('{}'.format(final_filename)) #, content_type='image/jpeg')
+    blob.make_public()
+    gcloud_link = "http://storage.googleapis.com/{}/{}".format(bucket_name, object_name)
+    sg = sendgrid.SendGridAPIClient(apikey=os.environ['SENDGRID_API_KEY'])
+    from_email = Email(os.environ["FROM_EMAIL"])
+    to_email = Email(email)
+    subject = "HackGT5: Dare to Venture - Photobooth Link"
+    content = Content("text/plain", "Here's a link to your photo: {}".format(gcloud_link))
+    mail = Mail(from_email, subject, to_email, content)
+    response = sg.client.mail.send.post(request_body=mail.get())
+    # print(response.status_code)
+    # print(response.body)
+    # print(response.headers)
+
+    return jsonify(success=True)
 
 def load_style_model(path_to_model):
     model = TransformerNet()
