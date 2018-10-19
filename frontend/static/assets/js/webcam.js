@@ -76,7 +76,7 @@ const takePhoto = () => {
                             previewCanvas.width = 900; // img.width;
                             previewCanvas.height = 600; // img.height;
                             previewCtx.drawImage(img, 0, 0, img.width * 900 / 2000, img.height * 900 / 2000);
-			    fullres = img;
+                            fullres = img;
                         };
                         img.src = url;
                         $('#video-player').hide();
@@ -134,9 +134,6 @@ $(document).ready(function () {
     $('#retake-photo').click(retakePhoto);
 
     $('#confirm-photo').click(function (e) {
-	if (fullres) { // we need to draw the whole thing to send the full res
-		canvas.width
-	}
         e.preventDefault();
         canvas.width = previewCanvas.width;
         canvas.height = previewCanvas.height;
@@ -177,7 +174,7 @@ $(document).ready(function () {
                     $('#take-wrap').hide();
                     
                     // Receive image data
-                    const { filters, mask, source } = data; // source 
+                    const { filters, mask, source } = data;
                     // console.log(mask);
                     // mask has outline info, normalMask merges outline and region
                     const normalMask = mask.map(maskRow => maskRow.map(e => e % OUTLINE_OFFSET)); 
@@ -200,8 +197,8 @@ $(document).ready(function () {
                             applyMask = applyMaskBase.bind(this, flatten(srcData), flatNormal); // apply mask cares about normal region
                             resolve();
                         };
-                        // img.src = source; // COMMENT BACK IN TO USE DSLR SOURCE
-                        img.src = currentFrame;
+                        img.src = source;
+                        // img.src = currentFrame;
                     });
 
                     applyMask = applyMaskBase.bind(this, flatten(ctx.getImageData(0, 0, canvas.width, canvas.height).data), flatNormal); // default to video feed (will get overwritten)
