@@ -203,7 +203,7 @@ $(document).ready(function () {
 
                     applyMask = applyMaskBase.bind(this, flatten(ctx.getImageData(0, 0, canvas.width, canvas.height).data), flatNormal); // default to video feed (will get overwritten)
 
-                    const outlineMask = flatMask;//.map(el => el - OUTLINE_OFFSET); // -> only preserve outline pixels
+                    const outlineMask = flatMask.map(el => el - OUTLINE_OFFSET); // -> only preserve outline pixels
                     applyActiveOutline = applyActiveOutlineBase.bind(this, outlineMask);
                     applyHoverOutline = applyHoverOutlineBase.bind(this, outlineMask);
         
