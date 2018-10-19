@@ -137,7 +137,19 @@ $(document).ready(function () {
         canvas.width = previewCanvas.width;
         canvas.height = previewCanvas.height;
         ctx.drawImage(previewCanvas, 0, 0);
-        currentFrame = canvas.toDataURL('image/jpeg', 1.0); // this is only temp, will be overwritten when we get low res from server
+        if (fullres) {
+            // we need to draw the full thing
+            previewCanvas.width = fullres.width;
+            previewCanvas.height = fullres.height;
+            previewCtx.drawImage(fullres, 0, 0);
+            currentFrame = previewCanvas.toDataURL('image/jpeg', 1.0);
+            // bring it back while we wait
+            previewCanvas.width = canvas.width;
+            previewCanvas.height = canvas.height;
+            previewCtx.drawImage(canvas, 0, 0);
+        } else {
+            currentFrame = canvas.toDataURL('image/jpeg', 1.0);
+        }
         iziToast.success({
             title: 'Photo Sent!',
             message: 'Please hold',

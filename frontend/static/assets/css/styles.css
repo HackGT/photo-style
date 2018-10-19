@@ -7,6 +7,7 @@ body {
     overflow-y: hidden;
     font-family: 'One Day', sans-serif;
     word-spacing: 120%; /* Don't think this is working */
+    text-transform: lowercase;
 }
 
 .home-dark {
