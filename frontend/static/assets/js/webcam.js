@@ -466,3 +466,37 @@ const flatten = function(arr, result = []) {
     }
     return result;
 };
+
+
+// WebSocket code below
+const nfcSocket = new WebSocket("ws://localhost:1337/");
+nfcSocket.onmessage = event => {
+    console.log(event.data);
+    $.ajax({
+        type: "POST",
+        url: 'https://registration.hack.gt/graphql',
+        timeout: 2000,
+        success: function (data, status) {
+            // console.log(data, status);
+            if (status == "success") {
+                const { user } = data;
+                if (!user) return;
+                const { email } = user;
+                if (!email) return;
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            iziToast.error({
+                title: 'Error',
+                message: 'Email retrieval failed'
+            });
+        }
+    });
+
+};
+
+// query {
+//     user(id: "3a665182-8a1e-4910-a80d-681d45bc524d") {
+//       email
+//     }
+// }
