@@ -35,10 +35,17 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     mask = np.zeros(numpy_image.shape[:2], dtype=np.int16)
     if len(scored_masks) > 0:
         for i, single_mask in enumerate(scored_masks):
-            single_mask = outline(single_mask, i + 1)  
+            single_mask = outline(single_mask, i + 1)
             mask[single_mask != 0] = 0
             mask += single_mask
 
+    temp = mask.copy()
+    temp[temp != 0] = 1
+    temp = (1 - temp)
+    temp = np.pad(temp, ((1, 1)), mode='constant', constant_value=1)
+    outline = outline(temp, 100)[1:-1, 1:-1]
+    mask[outline != 0] = 0
+    mask += outline
 
     # if len(scored_masks) > 0:
         # # pixel map where 0 is the background, 1 is the first person, etc
