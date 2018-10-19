@@ -20,7 +20,7 @@ import os
 import json
 import base64
 
-from skimage.transform import resize
+import skimage 
 
 # from fast_neural_style.forward import forward_pass
 import DetectronPytorch.tools._init_paths
@@ -28,6 +28,9 @@ from fast_neural_style.transformer_net import TransformerNet
 from DetectronPytorch.tools.wrapped_model import WrappedDetectron, union_masks, apply_binary_mask
 from joint_forward import segment_and_style
 from fast_neural_style.utils import get_image_stream, load_from_base64
+
+import torch.nn.functional as F
+import torch
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -97,8 +100,16 @@ def convert_encoded():
         buffered = BytesIO()
         i.save(buffered, format="JPEG")
         filter_payload.append(base64.b64encode(buffered.getvalue()).decode('ascii'))
+    
+    resized_mask = F.max_pool2d(torch.FloatTensor(mask).unsqueeze(dim=0), (3, 3), stride=3) 
+    resized_mask = resized_mask.squeeze().numpy().astype(int) 
 
-    return jsonify({'filters' : filter_payload, 'mask' : resize(mask, i.shape).tolist()})
+    im = im.resize((int(im.size[0] / 3), int(im.size[1] / 3)))
+    buffered = BytesIO()
+    im.save(buffered, format="JPEG")
+    source = base64.b64encode(buffered.getvalue()).decode('ascii')
+
+    return jsonify({'filters' : filter_payload, 'mask' : resized_mask.tolist(), 'source' : source})
 
 @app.route('/send_email', methods=['POST'])
 @cross_origin()

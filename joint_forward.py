@@ -32,7 +32,7 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
         scored_masks = [m for m, _ in detectron.segment_people(numpy_image, mask_threshold)]
 
     #merge masks
-    mask = np.zeros(numpy_image.shape[:2], dtype=np.int8)
+    mask = np.zeros(numpy_image.shape[:2], dtype=np.int16)
     if len(scored_masks) > 0:
         for i, single_mask in enumerate(scored_masks):
             single_mask = outline(single_mask, i + 1)  
