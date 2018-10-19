@@ -19,7 +19,7 @@ const OUTLINE_OFFSET = 100;
 var applyMask = () => console.error("Apply mask called before binding");
 var applyActiveOutline = () => console.error("Apply active outline called before binding");
 var applyHoverOutline = () => console.error("Apply hover outline called before binding");
-
+var fullres;
 // Mask id of people/background
 var hoverId = -1; // - 1 is none
 var activeId = -1;
@@ -73,9 +73,10 @@ const takePhoto = () => {
                         const img = new Image();
                         const url = `data:image/jpeg;base64,${image}`;
                         img.onload = function(){
-                            previewCanvas.width = img.width;
-                            previewCanvas.height = img.height;
-                            previewCtx.drawImage(img, 0, 0);
+                            previewCanvas.width = 900; // img.width;
+                            previewCanvas.height = 600; // img.height;
+                            previewCtx.drawImage(img, 0, 0, img.width * 900 / 2000, img.height * 900 / 2000);
+			    fullres = img;
                         };
                         img.src = url;
                         $('#video-player').hide();
@@ -133,6 +134,9 @@ $(document).ready(function () {
     $('#retake-photo').click(retakePhoto);
 
     $('#confirm-photo').click(function (e) {
+	if (fullres) { // we need to draw the whole thing to send the full res
+		canvas.width
+	}
         e.preventDefault();
         canvas.width = previewCanvas.width;
         canvas.height = previewCanvas.height;
