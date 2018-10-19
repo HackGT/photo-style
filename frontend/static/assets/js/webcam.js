@@ -197,7 +197,7 @@ $(document).ready(function () {
                             applyMask = applyMaskBase.bind(this, flatten(srcData), flatNormal); // apply mask cares about normal region
                             resolve();
                         };
-                        img.src = source;
+                        img.src = `data:image/jpeg;base64,${source}`;
                         // img.src = currentFrame;
                     });
 
