@@ -14,6 +14,8 @@ const backendUri = "http://64.62.141.7:8080/";
 const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_email";
 const takePhotoUri = '/capture';
+const nfcUri = '/get_email';
+var email;
 var currentFrame = '';
 const OUTLINE_OFFSET = 100;
 var applyMask = () => console.error("Apply mask called before binding");
@@ -59,8 +61,6 @@ const takePhoto = () => {
             snap.play();
             video.pause();
             $('#countdown-wrap').hide();
-            $('#take-check').show();
-            $('#take-photo').hide();
             
             $.ajax({
                 type: "POST",
@@ -77,6 +77,8 @@ const takePhoto = () => {
                             previewCanvas.height = 600; // img.height;
                             previewCtx.drawImage(img, 0, 0, img.width * 900 / 2000, img.height * 900 / 2000);
                             fullres = img;
+                            $('#take-check').show();
+                            $('#take-photo').hide();
                         };
                         img.src = url;
                         $('#video-player').hide();
@@ -95,6 +97,8 @@ const takePhoto = () => {
                     previewCanvas.width = video.videoWidth;
                     previewCanvas.height = video.videoHeight;
                     previewCtx.drawImage(video, 0, 0);
+                    $('#take-check').show();
+                    $('#take-photo').hide();
                 }
             });
         }
@@ -297,20 +301,18 @@ $(document).ready(function () {
     });
 
     // Send
-
-    $('#prompt-send').click(function (e) {
-        $('#send-modal').modal();
-    });
-    
-
-    $('#send-confirm').click(function (e) {
+    const sendToEmail = () => {
+        if (!email) {
+            console.error("No email provided");
+            return;
+        }
         const mixDict = activeFilters;
         for (entity in mixDict) {
             if (mixDict[entity] === "") // No filter
                 mixDict[entity] = -1;
         }
         $.post(sendMessageUri, JSON.stringify({
-            email: $('#email').val(),
+            email,
             mixInfo: mixDict
         }), function (data, status) {
             console.log(data, status)
@@ -328,6 +330,20 @@ $(document).ready(function () {
                 });
             }
         });
+    };
+
+    $('#prompt-send').click(function (e) {
+        if (email) {
+            sendToEmail();
+        } else {
+            $('#send-modal').modal();
+        }
+    });
+    
+
+    $('#send-confirm').click(function (e) {
+       email = $('email').val();
+       sendToEmail(); 
     });
 
     $('.restart-button').click(() => {
@@ -471,18 +487,30 @@ const flatten = function(arr, result = []) {
 // WebSocket code below
 const nfcSocket = new WebSocket("ws://localhost:1337/");
 nfcSocket.onmessage = event => {
-    console.log(event.data);
+    const id = JSON.parse(event.data)["badgeID"];
+    console.log({id})
     $.ajax({
         type: "POST",
-        url: 'https://registration.hack.gt/graphql',
-        timeout: 2000,
+        url: nfcUri,
+        data: JSON.stringify({id}),
+        timeout: 5000,
         success: function (data, status) {
-            // console.log(data, status);
             if (status == "success") {
-                const { user } = data;
-                if (!user) return;
-                const { email } = user;
-                if (!email) return;
+                const retEmail = data['email'];
+                if (!retEmail) {
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Email retrieval failed'
+                    });
+                    return;
+                } else {
+                    iziToast.info({
+                        title: 'Success',
+                        message: 'Email retrieved!'
+                    });
+                    $('#email').val(retEmail);
+                }
+                email = retEmail;
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -492,7 +520,6 @@ nfcSocket.onmessage = event => {
             });
         }
     });
-
 };
 
 // query {

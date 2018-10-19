@@ -12,6 +12,9 @@ import gphoto2 as gp
 from PIL import Image
 from io import BytesIO
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = Flask(__name__)
 
 @app.route('/capture', methods=['POST'])
@@ -37,6 +40,24 @@ def take_photo():
     return jsonify({'image': image_base64})
 
     # gp.check_result(gp.gp_camera_exit(camera))
+
+@app.route('/get_email', methods=['POST'])
+def get_email():
+    request_data = request.get_json(force=True)
+    id = request_data['id']
+    queryStr = "{" + \
+        'user(id: "{}") {{'.format(id) + \
+            "email" + \
+        "}" + \
+    "}"
+    data = { "query": queryStr }
+    headers = {'Authorization': 'Basic ' + os.environ['REGISTRATION_API_KEY']}
+    print(data)
+    print(headers)
+    res = requests.post(os.environ['REGISTRATION_URL'], json=data, headers=headers)
+    print(res.json())
+    email = res.json()['data']['user']['email']
+    return jsonify({'email': email}) # forward to frontend
 
 @app.route('/')
 def home():
