@@ -20,6 +20,8 @@ import os
 import json
 import base64
 
+from skimage.transform import resize
+
 # from fast_neural_style.forward import forward_pass
 import DetectronPytorch.tools._init_paths
 from fast_neural_style.transformer_net import TransformerNet
@@ -89,11 +91,14 @@ def convert_encoded():
     filter_payload = []
     for image in styled_images:
         i = Image.fromarray(image)
+        i = i.resize((int(i.size[0] / 3), int(i.size[1] / 3)))
+        # i.thumbnail((256, 256), Image.ANTIALIAS)
+        print(i)
         buffered = BytesIO()
         i.save(buffered, format="JPEG")
         filter_payload.append(base64.b64encode(buffered.getvalue()).decode('ascii'))
 
-    return jsonify({'filters' : filter_payload, 'mask' : mask.tolist()})
+    return jsonify({'filters' : filter_payload, 'mask' : resize(mask, i.shape).tolist()})
 
 @app.route('/send_email', methods=['POST'])
 @cross_origin()

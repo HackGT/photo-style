@@ -12,6 +12,7 @@ import random
 import string
 import cv2
 import numpy as np
+from scipy.signal import convolve2d
 
 def load_image(filename, size=None, scale=None):
     """Load as PIL Image (as input to the style model)"""
@@ -37,10 +38,6 @@ def tensor_to_numpy_image(out_tensor):
 def load_from_base64(base64_string):
     data = re.sub('^data:image/.+;base64,', '', base64_string)
     return Image.open(BytesIO(base64.b64decode(data)))
-
-# def encode_to_base64(image_array):
-
-
 
 def get_image_stream(output_tensor):
     image = get_image(output_tensor)
