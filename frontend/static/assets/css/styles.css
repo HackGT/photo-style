@@ -93,8 +93,8 @@ body {
 
 .text-center {
     color: black;
-    margin: 2em 0;
-    font-size: 5em;
+    margin: .1em 0;
+    font-size: 4em;
 }
 
 .radio-container {
@@ -141,4 +141,21 @@ input[type='radio']:checked + label {
 
 .photo-btn:disabled {
     color: gray;
+}
+
+.start-photo-previews {
+    border-radius: 4px;
+    height: auto;
+    width: 720px;
+    margin: 1em auto 4em;
+    text-align: center;
+}
+
+.front-previews {
+    display: block;
+    margin: auto;
+}
+
+#start-photo-container .photo-btn {
+    width: 100%;
 }
