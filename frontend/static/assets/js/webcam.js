@@ -341,7 +341,7 @@ $(document).ready(function () {
         const mixDict = activeFilters;
         for (entity in mixDict) {
             if (mixDict[entity] === "") // No filter
-                mixDict[entity] = -1;
+                delete mixDict[entity];
         }
         $.post(sendMessageUri, JSON.stringify({
             email,
