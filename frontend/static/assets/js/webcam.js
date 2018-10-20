@@ -15,7 +15,10 @@ const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_email";
 const takePhotoUri = '/capture';
 const nfcUri = '/get_email';
+const pointsUri = '/confirm_points';
+const cameraWaitUri = '/ready';
 var email;
+var userId;
 var currentFrame = '';
 const OUTLINE_OFFSET = 100;
 var applyMask = () => console.error("Apply mask called before binding");
@@ -26,6 +29,8 @@ var fullres;
 var hoverId = -1; // - 1 is none
 var activeId = -1;
 var activeFilters = {}; // store of applied filters ids, keyed by entity mask id
+const USE_WEBCAM = false;
+var photoLock = false; // can we take photo?
 
 const getVideo = () => {
     navigator.mediaDevices
@@ -42,74 +47,85 @@ const getVideo = () => {
         });
 };
 
+const receivePhoto = (rawStr) => {
+    $('#start-wrap').hide(); // just make sure here
+    $('#take-wrap').show();
+    if (!photoLock) {
+        const img = new Image();
+        const url = `data:image/jpeg;base64,${rawStr}`;
+        img.onload = function(){
+            previewCanvas.width = 900; // img.width;
+            previewCanvas.height = 600; // img.height;
+            previewCtx.drawImage(img, 0, 0, img.width * 900 / 2000, img.height * 900 / 2000);
+            fullres = img;
+            $('#take-check').show();
+            $('#take-photo').hide();
+        };
+        img.src = url;
+        if (USE_WEBCAM)
+            $('#video-player').hide();
+        $('#preview-photo').show();
+    }   
+}
+
 const takePhoto = () => {
     filterData = '';
     currentFrame = '';
     $("#take-photo").attr("disabled", true);
-    $('#countdown-wrap').show();
-    $("#countdown").countdown360({
-        radius: 60.5,
-        seconds: 1,
-        strokeWidth: 15,
-        fillStyle: '#FFF',
-        strokeStyle: '#000',
-        fontSize: 50,
-        fontColor: '#000',
-        autostart: false,
-        onComplete: function () {
-            snap.currentTime = 0;
-            snap.play();
-            video.pause();
-            $('#countdown-wrap').hide();
-            
-            $.ajax({
-                type: "POST",
-                url: takePhotoUri,
-                timeout: 10000,
-                success: function (data, status) {
-                    // console.log(data, status);
-                    if (data.image !== "" && status == "success") {
-                        const { image } = data;
-                        const img = new Image();
-                        const url = `data:image/jpeg;base64,${image}`;
-                        img.onload = function(){
-                            previewCanvas.width = 900; // img.width;
-                            previewCanvas.height = 600; // img.height;
-                            previewCtx.drawImage(img, 0, 0, img.width * 900 / 2000, img.height * 900 / 2000);
-                            fullres = img;
-                            $('#take-check').show();
-                            $('#take-photo').hide();
-                        };
-                        img.src = url;
-                        $('#video-player').hide();
-                        $('#preview-photo').show();
-                    } else {
-                        previewCanvas.width = video.videoWidth;
-                        previewCanvas.height = video.videoHeight;
-                        previewCtx.drawImage(video, 0, 0 );
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    iziToast.error({
-                        title: 'Error',
-                        message: 'DSLR taking failed, fallback to webcam'
-                    });
-                    previewCanvas.width = video.videoWidth;
-                    previewCanvas.height = video.videoHeight;
-                    previewCtx.drawImage(video, 0, 0);
-                    $('#take-check').show();
-                    $('#take-photo').hide();
-                }
+    // $('#countdown-wrap').show();
+    // $("#countdown").countdown360({
+    //     radius: 60.5,
+    //     seconds: 0,
+    //     strokeWidth: 15,
+    //     fillStyle: '#FFF',
+    //     strokeStyle: '#000',
+    //     fontSize: 50,
+    //     fontColor: '#000',
+    //     autostart: false,
+    //     onComplete: function () {
+    //         snap.currentTime = 0;
+    //         snap.play();
+    video.pause();
+    //         $('#countdown-wrap').hide();
+    
+    $.ajax({
+        type: "POST",
+        url: takePhotoUri,
+        timeout: 10000,
+        success: function (data, status) {
+
+            // console.log(data, status);
+            if (data.image !== "" && status == "success") {
+                const { image } = data;
+                receivePhoto(image);
+            } else {
+                previewCanvas.width = video.videoWidth;
+                previewCanvas.height = video.videoHeight;
+                previewCtx.drawImage(video, 0, 0 );
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            iziToast.error({
+                title: 'Error',
+                message: 'DSLR taking failed, fallback to webcam'
             });
+            previewCanvas.width = video.videoWidth;
+            previewCanvas.height = video.videoHeight;
+            previewCtx.drawImage(video, 0, 0);
+            $('#take-check').show();
+            $('#take-photo').hide();
         }
-    }).start()
+    });
+    //     }
+    // }).start()
 };
 
 const retakePhoto = () => {
     $('#take-check').hide();
     $('#take-photo').attr("disabled", false);
     $('#take-photo').show();
-    $('video-player').show();
+    if (USE_WEBCAM)
+        $('#video-player').show();
     $('preview-photo').hide();
     video.play();
 }
@@ -118,15 +134,31 @@ $(document).ready(function () {
 
     $('#take-wrap').hide();
     $('#filter-wrap').hide();
-    
+    if (USE_WEBCAM)
+        document.querySelector('#main-photo-take').classList.add('booth-left');
+    else
+        $('#video-player').hide();
+
+    // start wait for camera
+    $.ajax({
+        type: "POST",
+        url: cameraWaitUri,
+        timeout: 5000,
+        error: (jqXHR, textStatus, errorThrown) => {
+            iziToast.error({
+                title: 'Error',
+                message: 'Cannot poll camera'
+            });
+        }
+    });
+
     $('#start-photo').click(function (e) {
         e.preventDefault();
         getVideo();
         $('#start-wrap').hide();
         $('#take-wrap').show();
-	$('#preview-photo').hide();
+        $('#preview-photo').hide();
         $('#take-check').hide();
-        $('video-player').hide();
     });
 
     $('#take-photo').click(function (e) {
@@ -139,6 +171,7 @@ $(document).ready(function () {
 
     $('#confirm-photo').click(function (e) {
         e.preventDefault();
+        photoLock = true;
         canvas.width = previewCanvas.width;
         canvas.height = previewCanvas.height;
         ctx.drawImage(previewCanvas, 0, 0);
@@ -179,7 +212,6 @@ $(document).ready(function () {
                     
                     // Receive image data
                     const { filters, mask, source } = data;
-                    // console.log(mask);
                     // mask has outline info, normalMask merges outline and region
                     const normalMask = mask.map(maskRow => maskRow.map(e => e % OUTLINE_OFFSET)); 
                     const trackMouseCanvas = trackMouseCanvasBase.bind(this, normalMask); // mouse cares about regions only
@@ -330,6 +362,18 @@ $(document).ready(function () {
                 });
             }
         });
+        if (userId) {
+            $.ajax({
+                type: "POST",
+                url: pointsUri,
+                data: JSON.stringify({id: userId}),
+                timeout: 5000,
+                success: function (data, status) {
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                }
+            });
+        }
     };
 
     $('#prompt-send').click(function (e) {
@@ -339,10 +383,9 @@ $(document).ready(function () {
             $('#send-modal').modal();
         }
     });
-    
 
     $('#send-confirm').click(function (e) {
-       email = $('email').val();
+       email = $('#email').val();
        sendToEmail(); 
     });
 
@@ -511,6 +554,7 @@ nfcSocket.onmessage = event => {
                     $('#email').val(retEmail);
                 }
                 email = retEmail;
+                userId = id;
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -522,8 +566,16 @@ nfcSocket.onmessage = event => {
     });
 };
 
-// query {
-//     user(id: "3a665182-8a1e-4910-a80d-681d45bc524d") {
-//       email
-//     }
-// }
+const captureSocket = io();
+captureSocket.on('photo-taken', function(response) {
+    const res = JSON.parse(response);
+    const { image } = res;
+    if (image) {
+        receivePhoto(image);
+    } else {
+        iziToast.error({
+            title: 'Error',
+            message: 'Camera trigger failed, go manual?'
+        });
+    }
+});

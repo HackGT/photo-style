@@ -25,6 +25,13 @@
                 </div>
                 <div class="row">
                     <div class="col">
+                        <div class="start-photo-previews">
+                            <img class="filter-preview front-preview" src="/static/assets/images/sample2.jpg"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
                         <div class="start-photo-container">
                             <button id="start-photo" class="btn btn-primary btn-block photo-btn">Start</button>
                         </div>
@@ -39,10 +46,10 @@
                 <button class="photo-btn restart-button" id="restart">Restart</button>
             </div>
             <div class="section-body booth">
-                <div class="container booth-left">
+                <div class="container" id="main-photo-take">
                     <button class="photo-btn photo-take" id="take-photo">Cheese!</button>
                     <div id="take-check">
-                        <button class="photo-btn" id="retake-photo">Take Another</button>
+                        <button class="photo-btn" id="retake-photo">Delete This</button>
                         <button class="photo-btn" id="confirm-photo">Looks Good!</button>
                     </div>
                     <div class="countdown-wrap" id="countdown-wrap">
@@ -75,21 +82,33 @@
                                 </div>
                             </a>
                             <a href="#" data-filter="filter2" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Starrier&trade; Night</h5>
+                                <h5 class="mb-1 filter-heading underline">Mosaic</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-2" src="/static/assets/images/filter2.jpg"/>
+                                    <img class="filter-image" id="preview-2" src="/static/assets/images/filter3.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter3" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Mosaic</h5>
+                                <h5 class="mb-1 filter-heading underline">Sunset</h5>
                                 <div class="filter-preview">
-                                    <img class="filter-image" id="preview-3" src="/static/assets/images/filter3.jpg"/>
+                                    <img class="filter-image" id="preview-3" src="/static/assets/images/filter4.jpg"/>
                                 </div>
                             </a>
                             <a href="#" data-filter="filter4" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
-                                <h5 class="mb-1 filter-heading underline">Sunset</h5>
+                                <h5 class="mb-1 filter-heading underline">Green</h5>
                                 <div class="filter-preview">
                                     <img class="filter-image" id="preview-4" src="/static/assets/images/filter4.jpg"/>
+                                </div>
+                            </a>
+                            <a href="#" data-filter="filter5" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Cube</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" id="preview-5" src="/static/assets/images/filter3.jpg"/>
+                                </div>
+                            </a>
+                            <a href="#" data-filter="filter6" class="list-group-item list-group-item-action flex-column align-items-start filter-option">
+                                <h5 class="mb-1 filter-heading underline">Grayscale</h5>
+                                <div class="filter-preview">
+                                    <img class="filter-image" id="preview-6" src="/static/assets/images/filter3.jpg"/>
                                 </div>
                             </a>
                         </div>
@@ -134,6 +153,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="/static/assets/js/izitoast.js"></script>
     <script src="/static/assets/js/countdown.js"></script>
+    <script src="/static/assets/js/socket.io.min.js"></script>
     <script src="/static/assets/js/webcam.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
 </body>
