@@ -31,6 +31,8 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     with torch.no_grad():
         scored_masks = [m for m, _ in detectron.segment_people(numpy_image, mask_threshold)]
 
+    background_mask = np.ones(numpy_image.shape[:2], dtype=np.uint16)
+
     #merge masks
     mask = np.zeros(numpy_image.shape[:2], dtype=np.int16)
     if len(scored_masks) > 0:
@@ -38,14 +40,22 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
             single_mask = outline(single_mask, i + 1)
             mask[single_mask != 0] = 0
             mask += single_mask
+        background_bool_mask = ~union_masks(scored_masks)
+        print(background_bool_mask.shape)
+        background_mask[background_bool_mask] = 1
+    else:
+        background_bool_mask = [background_mask == 1]
 
-    temp = mask.copy()
-    temp[temp != 0] = 1
-    temp = (1 - temp)
-    temp = np.pad(temp, ((1, 1)), mode='constant', constant_value=1)
-    outline = outline(temp, 100)[1:-1, 1:-1]
-    mask[outline != 0] = 0
-    mask += outline
+    scored_masks = [background_bool_mask] + scored_masks
+
+    # temp = mask.copy()
+    # temp[temp != 0] = 1
+    # temp = (1 - temp)
+    # temp = np.pad(temp, ((1, 1)), mode='constant', constant_values=1)
+    # out = outline(temp, 100)[1:-1, 1:-1]
+
+    # mask[out != 0] = 0
+    # mask += out
 
     # if len(scored_masks) > 0:
         # # pixel map where 0 is the background, 1 is the first person, etc
