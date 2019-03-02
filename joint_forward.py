@@ -68,6 +68,8 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
         styled = style_utils.tensor_to_numpy_image(forward_pass(model, pil_image))
         styled_images.append(cv2.resize(styled, (numpy_image.shape[1], numpy_image.shape[0])))
 
+    styled_images.append(grayscale(numpy_image))
+
     return mask, scored_masks, styled_images
 
 if __name__ == '__main__':
