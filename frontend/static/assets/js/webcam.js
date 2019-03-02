@@ -21,6 +21,7 @@ var email;
 var userId;
 var currentFrame = '';
 const OUTLINE_OFFSET = 100;
+const shouldReload = false;
 var applyMask = () => console.error("Apply mask called before binding");
 var applyActiveOutline = () => console.error("Apply active outline called before binding");
 var applyHoverOutline = () => console.error("Apply hover outline called before binding");
@@ -29,7 +30,9 @@ var fullres;
 var hoverId = -1; // - 1 is none
 var activeId = -1;
 var activeFilters = {}; // store of applied filters ids, keyed by entity mask id
-const USE_WEBCAM = false;
+const USE_WEBCAM = true;
+const USE_POINTS = false;
+var pointsGiven = false;
 var photoLock = false; // can we take photo?
 
 const getVideo = () => {
@@ -353,7 +356,8 @@ $(document).ready(function () {
                     title: 'FYI',
                     message: 'Photo messaged!'
                 });
-                window.location.reload();
+                if (shouldReload)
+                    window.location.reload();
             } else {
                 iziToast.error({
                     title: 'Error',
@@ -362,7 +366,9 @@ $(document).ready(function () {
                 });
             }
         });
-        if (userId) {
+        if (userId && !pointsGiven && USE_POINTS) {
+            pointsGiven = true;
+            
             $.ajax({
                 type: "POST",
                 url: pointsUri,

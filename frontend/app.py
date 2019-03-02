@@ -68,6 +68,7 @@ def get_email():
     res = requests.post(os.environ['REGISTRATION_URL'], json=data, headers=headers)
     print(res.json())
     email = res.json()['data']['user']['email']
+    print(email)
     return jsonify({'email': email}) # forward to frontend
 
 @app.route('/confirm_points', methods=['POST'])
