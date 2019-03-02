@@ -32,6 +32,7 @@ from fast_neural_style.utils import get_image_stream, load_from_base64
 import torch.nn.functional as F
 import torch
 
+EVENT_NAME = "BuildGT"
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -165,7 +166,7 @@ def prepare_final():
     sg = sendgrid.SendGridAPIClient(apikey=os.environ['SENDGRID_API_KEY'])
     from_email = Email(os.environ["FROM_EMAIL"])
     to_email = Email(email)
-    subject = "HackGT5: Dare to Venture - Photobooth Link"
+    subject = "{} - Photobooth Link".format(EVENT_NAME)
     content = Content("text/html", '<a href="{}">Here</a> is a link to your photo. Have a nice day!'.format(gcloud_link))
     mail = Mail(from_email, subject, to_email, content)
     response = sg.client.mail.send.post(request_body=mail.get())
