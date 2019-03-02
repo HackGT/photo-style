@@ -7,6 +7,8 @@ The style transfer model is modified from [PyTorch/examples](https://github.com/
  license and readme.
 
 For quick out of the box localhost setup:
-		- Startup the backend server, link the proper address in frontend
-		- Start frontend flask server, access via localhost to avoid insecure origins on chrome
-		- Start nfc-badge-server and follow appropriate instructions
+	- clone this repo and badge repo on client, this repo on server
+	- backend server needs to run w/ gpu
+	- Startup the backend server, link the proper address in frontend
+	- Start frontend flask server, access via localhost to avoid insecure origins on chrome
+	- Start nfc-badge-server and follow appropriate instructions
