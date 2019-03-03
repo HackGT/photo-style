@@ -17,6 +17,7 @@ For 'quick out of the box' localhost setup:
 		- Export service key json filename:
 			- export GOOGLE_APPLICATION_CREDENTIALS=<key.json>
 			- https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-cpp (export/load into a file)
+			- https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-cpp
 	- open port, include port in address (test server up using simple get)
 		- sudo ufw status verbose
 		- sudo ufw allow <port>/tcp
