@@ -1,7 +1,7 @@
 *.pyc
-fast_neural_style/images
-fast_neural_style/saved_models
+backend/fast_neural_style/images
+backend/fast_neural_style/saved_models
 frontend/assets/filters
 .vscode
 .env
-cloud_cluster.json
+backend/cloud_cluster.json
