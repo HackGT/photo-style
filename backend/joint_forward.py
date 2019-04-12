@@ -72,6 +72,38 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
 
     return mask, scored_masks, styled_images
 
+def background_outline(mask_arr):
+    row, col = mask_arr.shape
+    boundaryPoints = np.zeros(shape=(row,col))
+
+    for i in range(0, row):
+        for j in range(0, col):
+            if mask_arr[i][j] == 1:
+                if i == 0:
+                    if j == 0:
+                        if (mask_arr[0][1] != 1 or mask_arr[1][1] != 1 or mask_arr[1][0] != 1):
+                            boundaryPoints[0][0] = 1
+                    elif j != col - 1:
+                        if (mask_arr[0][j+1] != 1 or mask_arr[1][j+1] != 1 or mask_arr[1][j] != 1):
+                            boundaryPoints[0][j] = 1
+                    else:
+                        if (mask_arr[0][j-1] != 1 or mask_arr[1][j-1] != 1 or mask_arr[1][j] != 1):
+                            boundaryPoints[0][j] = 1
+                elif j == 0:
+                    if i != row - 1:
+                        if (mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j+1] != 1 or mask_arr[i+1][j] != 1 or mask_arr[i+1][j+1] != 1):
+                            boundaryPoints[i][j] = 1
+                    else:
+                        if (mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j+1] != 1):
+                            boundaryPoints[i][j] = 1
+                else:
+                    if (mask_arr[i-1][j-1] != 1 or mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j-1] != 1 or mask_arr[i][j+1] != 1 or mask_arr[i+1][j-1] != 1 or mask_arr[i+1][j] != 1 or mask_arr[i+1][j+1] != 1):
+                        boundaryPoints[i][j] = 1
+
+    boundaryPoints = boundaryPoints * 100
+    return boundaryPoints
+
+
 if __name__ == '__main__':
     #load style models
     models = []
