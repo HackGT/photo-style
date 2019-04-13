@@ -32,7 +32,7 @@ from fast_neural_style.utils import get_image_stream, load_from_base64
 import torch.nn.functional as F
 import torch
 
-EVENT_NAME = "Catalyst"
+EVENT_NAME = os.environ['EVENT_NAME']
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
