@@ -8,9 +8,7 @@ The style transfer model is modified from [PyTorch/examples](https://github.com/
 
 For 'quick out of the box' localhost setup:
 # BACKEND:
-	- Use paperspace! (DL box is has versions that are too new, https://myselfhimanshu.github.io/posts/setting_paperspace_dl/)
-	- sudo apt install nvidia-cuda-toolkit
-	- restart kernel (for cuda to be detected)
+	- Use paperspace! (DL box is has versions that are too new, https://myselfhimanshu.github.io/posts/setting_paperspace_dl/) - USE ML IN A BOX
 	- ./setup.sh (may run into some directory issues, data directory should be on base of DetectronPytorch)
 	- Load appropriate env vars:
 		- SENDGRID_API_KEY
@@ -21,9 +19,9 @@ For 'quick out of the box' localhost setup:
 			- export GOOGLE_APPLICATION_CREDENTIALS=<key.json>
 			- https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-cpp (export/load into a file)
 			- https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-cpp
+	- conda install -c pytorch=0.4.1
 	- open port, include port in address (test server up using simple get)
 		- sudo ufw status verbose
-		- sudo ufw allow ssh
 		- sudo ufw enable
 		- sudo ufw allow <port>/tcp
 	- python server.py

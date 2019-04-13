@@ -32,7 +32,7 @@ from fast_neural_style.utils import get_image_stream, load_from_base64
 import torch.nn.functional as F
 import torch
 
-EVENT_NAME = "BuildGT"
+EVENT_NAME = "Catalyst"
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -160,12 +160,12 @@ def prepare_final():
     blob.make_public()
     gcloud_link = "http://storage.googleapis.com/{}/{}".format(bucket_name, object_name)
     print(gcloud_link)
-    sg = sendgrid.SendGridAPIClient(apikey=os.environ['SENDGRID_API_KEY'])
-    from_email = Email(os.environ["FROM_EMAIL"])
-    to_email = Email(email)
+    sg = sendgrid.SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
+    from_email = os.environ["FROM_EMAIL"]
+    to_email = email
     subject = "{} - Photobooth Link".format(EVENT_NAME)
-    content = Content("text/html", '<a href="{}">Here</a> is a link to your photo. Have a nice day!'.format(gcloud_link))
-    mail = Mail(from_email, subject, to_email, content)
+    content = '<a href="{}">Here</a> is a link to your photo. Have a nice day!'.format(gcloud_link)
+    mail = Mail(from_email=from_email, to_emails=to_email, subject=subject, html_content=content)
     response = sg.client.mail.send.post(request_body=mail.get())
 
     return jsonify(success=True)

@@ -10,7 +10,7 @@ const hoverCanvas = document.querySelector("#hover-layer");
 const hoverCtx = hoverCanvas.getContext("2d");
 
 const snap = document.querySelector(".snap");
-const backendUri = "http://35.207.2.182 /";
+const backendUri = "http://74.82.31.70:8080/";
 const requestFiltersUri = backendUri + "convert_encoded";
 const sendMessageUri = backendUri + "send_email";
 const takePhotoUri = '/capture';
