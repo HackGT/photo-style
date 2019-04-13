@@ -27,7 +27,7 @@ def outline(mask, value):
     mask = mask * value
     return mask + x
 
-def background_outline(mask_arr):
+def make_background_outline(mask_arr):
     # TODO: why can't we use sobel
     outline = np.zeros_like(mask_arr).astype(int)
     mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
@@ -38,10 +38,12 @@ def background_outline(mask_arr):
                 if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
                     outline[i-1, j-1] = 1 # offset for padding
     outline = convolve2d(outline, dilation_kernel, mode = 'same', boundary='fill', fillvalue='0')
-    outline += 100
-    region = mask_arr.astype(int)
-    region[outline != 0] = outline
-    return region
+    outline *= 100
+    print(outline.shape)
+    print(outline[:2, :2])
+    outline = np.pad(outline, ((1,1), (1,1)), mode="constant", constant_values=0)
+    # Skip zeroing because background is special case 0 key
+    return outline
 
 def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     numpy_image = np.array(pil_image)
@@ -59,8 +61,9 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
             mask += single_mask
         background_bool_mask = ~union_masks(scored_masks)
         background_mask = background_bool_mask.astype(int)
-        background_outline = background_outline(background_bool_mask)
-        mask[background_outline != 0] = background_outline
+    background_outline = make_background_outline(background_mask)
+    mask[background_outline != 0] = 0
+    mask += background_outline
 
     scored_masks = [background_mask] + scored_masks
     # scored_masks is a list of boolean masks
