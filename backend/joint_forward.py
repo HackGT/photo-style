@@ -16,6 +16,7 @@ dilation_kernel = np.ones((9, 9)).astype(np.int8)
 sobel_x = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]]).astype(np.int8)
 sobel_y = sobel_x.copy().T
 
+# mask is boolean, binary
 def outline(mask, value):
     x = abs(convolve2d(mask, sobel_x, mode = 'same', boundary='fill', fillvalue='0'))
     y = abs(convolve2d(mask, sobel_y, mode = 'same', boundary='fill', fillvalue='0'))
@@ -31,9 +32,9 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     with torch.no_grad():
         scored_masks = [m for m, _ in detectron.segment_people(numpy_image, mask_threshold)]
 
+    # background is by default, everything
     background_mask = np.ones(numpy_image.shape[:2], dtype=np.uint16)
 
-    #merge masks
     mask = np.zeros(numpy_image.shape[:2], dtype=np.int16)
     if len(scored_masks) > 0:
         for i, single_mask in enumerate(scored_masks):
@@ -41,12 +42,11 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
             mask[single_mask != 0] = 0
             mask += single_mask
         background_bool_mask = ~union_masks(scored_masks)
-        print(background_bool_mask.shape)
-        background_mask[background_bool_mask] = 1
-    else:
-        background_bool_mask = [background_mask == 1]
+        background_mask = background_bool_mask.astype(int)
 
-    scored_masks = [background_bool_mask] + scored_masks
+    scored_masks = [background_mask] + scored_masks
+    # scored_masks is a list of boolean masks
+    # mask is a unified mask with values
 
     # temp = mask.copy()
     # temp[temp != 0] = 1
@@ -73,36 +73,19 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     return mask, scored_masks, styled_images
 
 def background_outline(mask_arr):
-    row, col = mask_arr.shape
-    boundaryPoints = np.zeros(shape=(row,col))
+    # TODO: why can't we use sobel
+    outlined_mask = np.zeros_like(mask_arr).astype(int)
+    mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
 
-    for i in range(0, row):
-        for j in range(0, col):
-            if mask_arr[i][j] == 1:
-                if i == 0:
-                    if j == 0:
-                        if (mask_arr[0][1] != 1 or mask_arr[1][1] != 1 or mask_arr[1][0] != 1):
-                            boundaryPoints[0][0] = 1
-                    elif j != col - 1:
-                        if (mask_arr[0][j+1] != 1 or mask_arr[1][j+1] != 1 or mask_arr[1][j] != 1):
-                            boundaryPoints[0][j] = 1
-                    else:
-                        if (mask_arr[0][j-1] != 1 or mask_arr[1][j-1] != 1 or mask_arr[1][j] != 1):
-                            boundaryPoints[0][j] = 1
-                elif j == 0:
-                    if i != row - 1:
-                        if (mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j+1] != 1 or mask_arr[i+1][j] != 1 or mask_arr[i+1][j+1] != 1):
-                            boundaryPoints[i][j] = 1
-                    else:
-                        if (mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j+1] != 1):
-                            boundaryPoints[i][j] = 1
-                else:
-                    if (mask_arr[i-1][j-1] != 1 or mask_arr[i-1][j] != 1 or mask_arr[i-1][j+1] != 1 or mask_arr[i][j-1] != 1 or mask_arr[i][j+1] != 1 or mask_arr[i+1][j-1] != 1 or mask_arr[i+1][j] != 1 or mask_arr[i+1][j+1] != 1):
-                        boundaryPoints[i][j] = 1
-
-    boundaryPoints = boundaryPoints * 100
-    return boundaryPoints
-
+    for i in range(1, mask_arr.shape[0] - 1):
+        for j in range(1, mask_arr.shape[1] - 1):
+            if mask_arr[i,j]: # if background point
+                if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
+                    outlined_mask[i-1, j-1] = 100 # offset for padding
+                else: 
+                    outlined_mask[i-1, j-1] = 1
+                
+    return outlined_mask
 
 if __name__ == '__main__':
     #load style models
