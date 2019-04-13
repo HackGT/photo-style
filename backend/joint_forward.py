@@ -39,7 +39,7 @@ def make_background_outline(mask_arr):
             if mask_arr[i,j]: # if background point
                 if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
                     outline[i-1, j-1] = 1 # offset for padding
-    outline += 100
+    outline *= 100
     return outline
 
 def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
