@@ -43,6 +43,8 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
             mask += single_mask
         background_bool_mask = ~union_masks(scored_masks)
         background_mask = background_bool_mask.astype(int)
+        background_outline = background_outline(background_bool_mask)
+        mask[background_outline != 0] = background_outline
 
     scored_masks = [background_mask] + scored_masks
     # scored_masks is a list of boolean masks
@@ -74,19 +76,19 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
 
 def background_outline(mask_arr):
     # TODO: why can't we use sobel
-    outlined_mask = np.zeros_like(mask_arr).astype(int)
+    outline = np.zeros_like(mask_arr).astype(int)
     mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
 
     for i in range(1, mask_arr.shape[0] - 1):
         for j in range(1, mask_arr.shape[1] - 1):
             if mask_arr[i,j]: # if background point
                 if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
-                    outlined_mask[i-1, j-1] = 100 # offset for padding
-                else: 
-                    outlined_mask[i-1, j-1] = 1
-                
-    return outlined_mask
-
+                    outline[i-1, j-1] = 1 # offset for padding
+    outline = convolve2d(outline, dilation_kernel, mode = 'same', boundary='fill', fillvalue='0')
+    outline += 100
+    region = mask_arr.astype(int)
+    region[outline != 0] = outline
+    return region
 if __name__ == '__main__':
     #load style models
     models = []
