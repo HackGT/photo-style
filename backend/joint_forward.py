@@ -54,7 +54,8 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     if len(scored_masks) > 0:
         background_bool_mask = ~union_masks(scored_masks)
         background_mask = background_bool_mask.astype(int)
-        background_outline = outline(background_mask, 0, False)
+        background_outline = outline(background_mask, 100, False) # Expect outline back as 200
+        background_outline /= 2
         mask[background_outline != 0] = 0
         mask += background_outline
         for i, single_mask in enumerate(scored_masks):
