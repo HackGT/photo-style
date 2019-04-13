@@ -29,18 +29,18 @@ def outline(mask, value, use_base=True):
         return mask + x
     return x
 
-# def make_background_outline(mask_arr):
-#     # TODO: why can't we use sobel
-#     outline = np.zeros_like(mask_arr).astype(int)
-#     mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
+def make_background_outline(mask_arr):
+    # TODO: why can't we use sobel
+    outline = np.zeros_like(mask_arr).astype(int)
+    mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
 
-#     for i in range(1, mask_arr.shape[0] - 1):
-#         for j in range(1, mask_arr.shape[1] - 1):
-#             if mask_arr[i,j]: # if background point
-#                 if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
-#                     outline[i-1, j-1] = 1 # offset for padding
-#     outline += 100
-#     return outline
+    for i in range(1, mask_arr.shape[0] - 1):
+        for j in range(1, mask_arr.shape[1] - 1):
+            if mask_arr[i,j]: # if background point
+                if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
+                    outline[i-1, j-1] = 1 # offset for padding
+    outline += 100
+    return outline
 
 def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     numpy_image = np.array(pil_image)
@@ -54,8 +54,9 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     if len(scored_masks) > 0:
         background_bool_mask = ~union_masks(scored_masks)
         background_mask = background_bool_mask.astype(int)
-        background_outline = outline(background_mask, 100, False) # Expect outline back as 200
-        background_outline /= 2
+        # background_outline = outline(background_mask, 100, False) # Expect outline back as 200
+        # background_outline /= 2
+        background_outline = make_background_outline(background_mask)
         mask[background_outline != 0] = 0
         mask += background_outline
         for i, single_mask in enumerate(scored_masks):
@@ -63,6 +64,7 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
             mask[single_mask != 0] = 0
             mask += single_mask
     else:
+        background_outline = make_background_outline(background_mask)
         background_outline = outline(background_mask, 0, False) # Short circuit, preferably
         mask[background_outline != 0] = 0
 
