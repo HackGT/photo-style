@@ -66,8 +66,6 @@ def root():
 def convert():
     im = Image.open(request.files['file'])
     im = im.resize((int(im.size[0] / 1), int(im.size[1] / 1)), Image.LANCZOS)
-    print(im)
-    model_name = random.choice(model_names)
     mask, scored_masks, styled_images = segment_and_style(models, detectron, im)
 
     numpy_image = np.array(im)
@@ -90,10 +88,9 @@ def convert_encoded():
     im = load_from_base64(request_data['image'])
 
     print('Input Image: {}'.format(im.size))
-    model_name = random.choice(model_names)
     mask, scored_masks, styled_images = segment_and_style(models, detectron, im)
     numpy_image = np.array(im)
-    print("Found {} people".format(len(scored_masks)))
+    print("Found {} people".format(len(scored_masks) - 1))
 
     image_cache['source_im'] = numpy_image.copy()
     image_cache['scored_masks'] = [m.copy() for m in scored_masks]

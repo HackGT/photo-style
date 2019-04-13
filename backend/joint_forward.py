@@ -17,33 +17,30 @@ sobel_x = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]]).astype(np.int8)
 sobel_y = sobel_x.copy().T
 
 # mask is boolean, binary
-def outline(mask, value):
+def outline(mask, value, use_base=True):
     x = abs(convolve2d(mask, sobel_x, mode = 'same', boundary='fill', fillvalue='0'))
     y = abs(convolve2d(mask, sobel_y, mode = 'same', boundary='fill', fillvalue='0'))
     x += y
     x = convolve2d(x, dilation_kernel, mode = 'same', boundary='fill', fillvalue='0')
     x[x != 0] = 100 + value
-    x[mask != 0] = 0
-    mask = mask * value
-    return mask + x
+    if use_base:
+        x[mask != 0] = 0
+        mask = mask * value
+        return mask + x
+    return x
 
-def make_background_outline(mask_arr):
-    # TODO: why can't we use sobel
-    outline = np.zeros_like(mask_arr).astype(int)
-    mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
+# def make_background_outline(mask_arr):
+#     # TODO: why can't we use sobel
+#     outline = np.zeros_like(mask_arr).astype(int)
+#     mask_arr = np.pad(mask_arr, ((1, 1), (1, 1)), 'constant', constant_values=-1) # Key for edge
 
-    for i in range(1, mask_arr.shape[0] - 1):
-        for j in range(1, mask_arr.shape[1] - 1):
-            if mask_arr[i,j]: # if background point
-                if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
-                    outline[i-1, j-1] = 1 # offset for padding
-    outline = convolve2d(outline, dilation_kernel, mode = 'same', boundary='fill', fillvalue='0')
-    outline *= 100
-    print(outline.shape)
-    print(outline[:2, :2])
-    outline = np.pad(outline, ((1,1), (1,1)), mode="constant", constant_values=0)
-    # Skip zeroing because background is special case 0 key
-    return outline
+#     for i in range(1, mask_arr.shape[0] - 1):
+#         for j in range(1, mask_arr.shape[1] - 1):
+#             if mask_arr[i,j]: # if background point
+#                 if not (mask_arr[i-1,j] == 1 and mask_arr[i+1,j] == 1 and mask_arr[i, j-1] == 1 and mask_arr[i, j+1] == 1):
+#                     outline[i-1, j-1] = 1 # offset for padding
+#     outline += 100
+#     return outline
 
 def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
     numpy_image = np.array(pil_image)
@@ -55,15 +52,19 @@ def segment_and_style(style_models, detectron, pil_image, mask_threshold = 0.9):
 
     mask = np.zeros(numpy_image.shape[:2], dtype=np.int16)
     if len(scored_masks) > 0:
+        background_bool_mask = ~union_masks(scored_masks)
+        background_mask = background_bool_mask.astype(int)
+        background_outline = outline(background_mask, 0, False)
+        mask[background_outline != 0] = 0
+        mask += background_outline
         for i, single_mask in enumerate(scored_masks):
             single_mask = outline(single_mask, i + 1)
             mask[single_mask != 0] = 0
             mask += single_mask
-        background_bool_mask = ~union_masks(scored_masks)
-        background_mask = background_bool_mask.astype(int)
-    background_outline = make_background_outline(background_mask)
-    mask[background_outline != 0] = 0
-    mask += background_outline
+    else:
+        background_outline = outline(background_mask, 0, False) # Short circuit, preferably
+        mask[background_outline != 0] = 0
+
 
     scored_masks = [background_mask] + scored_masks
     # scored_masks is a list of boolean masks
