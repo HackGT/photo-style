@@ -13,6 +13,7 @@ pip install packaging
 pip install pyyaml
 pip install Cython
 pip install pycocotools
+conda install torchvision
 cd DetectronPytorch/lib/
 . make.sh
 cd ../
