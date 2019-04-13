@@ -1,0 +1,3 @@
+[submodule "backend/DetectronPytorch"]
+	path = backend/DetectronPytorch
+	url = https://github.com/ruyimarone/DetectronPytorch.git
