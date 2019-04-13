@@ -11,6 +11,7 @@ pip install scikit-image
 pip install opencv-python
 pip install packaging
 pip install pyyaml
+pip install Cython
 pip install pycocotools
 cd DetectronPytorch/lib/
 . make.sh
